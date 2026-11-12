@@ -296,6 +296,107 @@
       .repos .fine { font-size: 14px; color: var(--ink-2); max-width: 680px; }
       .repos .fine li { margin-bottom: 5px; }
 
+      /* ---------- New features ---------- */
+      .tabs { overflow-x: auto; max-width: 52vw; }
+      .tabs button { white-space: nowrap; padding: 5px 12px; }
+      .src-list { margin-top: 8px; font-size: 12.5px; color: var(--ink-2); }
+      .src-list a { color: var(--accent-ink); }
+      .compare-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 6px; }
+      @media (min-width: 700px) { .compare-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); } }
+      .cmp-card { border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; background: var(--surface); font-size: 13.5px; }
+      .cmp-card.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+      .cmp-card h5 { margin: 0 0 6px; font-size: 12.5px; color: var(--accent-ink); }
+      .cmp-card .use-btn, .run-btn, .dl-btn {
+        background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 8px;
+        padding: 5px 11px; font-size: 12.5px; font-weight: 600; min-height: 2rem; margin-top: 8px;
+      }
+      .cmp-card .use-btn:hover, .run-btn:hover, .dl-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+      .code-head { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+      .code-head .lang { font-size: 11.5px; font-weight: 700; text-transform: uppercase; color: var(--ink-3); }
+      .run-out {
+        display: none; background: #1e1b16; color: #e8e2d2; border-radius: 10px; padding: 10px 12px;
+        font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 6px; max-height: 260px; overflow-y: auto;
+      }
+      .run-out.show { display: block; }
+      .export-menu {
+        position: fixed; top: 58px; right: 14px; z-index: 55; background: var(--surface);
+        border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; display: none; min-width: 190px;
+      }
+      .export-menu.show { display: block; }
+      .export-menu button { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 8px 10px; font-size: 14px; min-height: 2.3rem; }
+      .export-menu button:hover { background: var(--surface-2); }
+      .panel-view { max-width: 820px; margin: 0 auto; padding: 24px 20px 40px; display: none; }
+      .panel-view.show { display: block; }
+      .panel-view h2 { font-family: var(--serif); font-size: 27px; font-weight: 600; margin: 0 0 6px; }
+      .panel-view .lede { color: var(--ink-2); margin: 0 0 18px; max-width: 640px; }
+      .prompt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 640px) { .prompt-grid { grid-template-columns: 1fr; } }
+      .prompt-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 15px; text-align: left; width: 100%; }
+      .prompt-card:hover { border-color: var(--line-2); background: var(--surface-2); }
+      .prompt-card .kind { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); font-weight: 700; }
+      .prompt-card h3 { margin: 3px 0 4px; font-size: 15.5px; }
+      .prompt-card p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+      .call-overlay {
+        position: fixed; inset: 0; z-index: 70; background: var(--bg); display: none;
+        flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center;
+      }
+      .call-overlay.show { display: flex; }
+      .call-orb { width: 96px; height: 96px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; }
+      .call-orb.live { animation: pulse 1.6s infinite; }
+      @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+      @media (prefers-reduced-motion: reduce) { .call-orb.live { animation: none; } }
+      .call-status { font-family: var(--serif); font-size: 24px; font-weight: 600; }
+      .call-last { color: var(--ink-2); max-width: 520px; max-height: 30vh; overflow-y: auto; }
+      .call-end { background: var(--err); color: #fff; border: none; border-radius: 999px; padding: 11px 26px; font-weight: 700; min-height: 2.9rem; }
+      .switch-btn {
+        width: 52px; height: 30px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-2);
+        position: relative; flex: 0 0 auto; min-height: 30px; padding: 0;
+      }
+      .switch-btn::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-3); transition: left 0.18s, background 0.18s; }
+      .switch-btn[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); }
+      .switch-btn[aria-checked="true"]::after { left: 25px; background: var(--accent); }
+      .mem-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+      .mem-list { list-style: none; margin: 8px 0; padding: 0; }
+      .mem-list li { display: flex; gap: 8px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 6px 10px; font-size: 13.5px; margin-bottom: 6px; }
+      .mem-list li span { flex: 1; overflow-wrap: anywhere; }
+      .mem-list li button { background: none; border: none; color: var(--err); font-weight: 700; min-height: 2rem; min-width: 2rem; }
+      .forget-btn { background: none; border: 1px solid var(--err); color: var(--err); border-radius: 9px; padding: 6px 13px; font-weight: 600; font-size: 13.5px; min-height: 2.3rem; }
+
+      /* Code studio (live preview) */
+      @media (max-width: 820px) {
+        .topbar { flex-wrap: wrap; }
+        .tabs { order: 3; width: 100%; max-width: none; justify-content: flex-start; }
+        .tabs button { padding: 5px 9px; font-size: 13.5px; }
+      }
+      .studio { max-width: 1060px; margin: 0 auto; padding: 24px 20px 40px; display: none; }
+      .studio.show { display: block; }
+      .studio h2 { font-family: var(--serif); font-size: 27px; font-weight: 600; margin: 0 0 6px; }
+      .studio .lede { color: var(--ink-2); margin: 0 0 16px; max-width: 680px; }
+      .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+      @media (max-width: 820px) { .studio-grid { grid-template-columns: 1fr; } }
+      .studio-pane { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+      .studio-pane .pane-head {
+        display: flex; align-items: center; gap: 4px; padding: 7px 10px;
+        background: var(--surface-2); border-bottom: 1px solid var(--line); flex-wrap: wrap;
+      }
+      .studio-pane .pane-head .pt { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-right: auto; }
+      .code-tabs { display: flex; gap: 3px; }
+      .code-tabs button { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 12px; font-size: 13px; font-weight: 600; min-height: 2rem; }
+      .code-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .studio textarea {
+        width: 100%; border: none; background: none; resize: vertical; display: none;
+        font-family: var(--mono); font-size: 13px; line-height: 1.55; padding: 12px;
+        min-height: 300px; outline: none; color: var(--ink);
+      }
+      .studio textarea.show { display: block; }
+      .studio iframe { width: 100%; height: 336px; border: none; display: block; background: #fff; }
+      .studio-out {
+        background: #1e1b16; color: #e8e2d2; font-family: var(--mono); font-size: 12.5px;
+        padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 170px; overflow-y: auto;
+        border-top: 1px solid var(--line); min-height: 42px;
+      }
+      .studio-out .err-line { color: #ef9a94; }
+
       /* Settings drawer */
       .scrim {
         position: fixed; inset: 0; background: rgba(25, 20, 12, 0.42);
@@ -381,7 +482,7 @@
           <div class="pc-label">Answering with</div>
           <div class="pc-name" id="pcName">Auto</div>
           <div class="pc-chain" id="pcChain">Ollama · Jan · Groq · OpenRouter · Gemini · Mistral · LLM7 · Free web gateway (text.pollinations.ai)</div>
-          <div class="pc-note">Chats and keys live only in this open page — reload and they are gone.</div>
+          <div class="pc-note">Chats and keys live only in this open page — reload and they are gone. Long memory is off by default; if you turn it on in Settings, the facts are stored only in this browser, on this device — and while it is on, they ride along as context in the messages you send to your chosen provider, like anything else you type.</div>
         </div>
       </aside>
       <div class="side-scrim" id="sideScrim"></div>
@@ -394,10 +495,16 @@
           </button>
           <div class="tabs" role="tablist" aria-label="Views">
             <button type="button" role="tab" id="tabChat" aria-selected="true">Chat</button>
+            <button type="button" role="tab" id="tabPrompts" aria-selected="false">Prompts</button>
+            <button type="button" role="tab" id="tabCode" aria-selected="false">Code</button>
+            <button type="button" role="tab" id="tabExt" aria-selected="false">Extension</button>
             <button type="button" role="tab" id="tabRepos" aria-selected="false">Repos</button>
           </div>
           <div class="spacer"></div>
           <span class="top-note">Public version — anyone with the link can chat here</span>
+          <button class="icon-btn" id="exportBtn" type="button" aria-label="Export this chat" title="Export chat (.md / .txt / share)">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+          </button>
           <button class="icon-btn" id="settingsBtn" type="button" aria-label="Open settings" title="Settings">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09c0 .68.4 1.3 1 1.55.61.26 1.32.1 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01c.26.6.87 1 1.55 1H21a2 2 0 1 1 0 4h-.09c-.68 0-1.3.4-1.51 1z"/></svg>
           </button>
@@ -405,6 +512,48 @@
 
         <div class="scroll-area" id="scrollArea">
           <div class="thread" id="thread"></div>
+
+          <!-- Prompt library -->
+          <section class="panel-view" id="promptsView" aria-label="Prompt library">
+            <h2>Prompt library</h2>
+            <p class="lede">Ready-made prompts in Bangla and English for coding, study and writing. Tap one and it lands in the message box — edit the [bracketed] parts, then send.</p>
+            <div class="prompt-grid" id="promptGrid"></div>
+          </section>
+
+          <!-- Chrome extension -->
+          <section class="panel-view" id="extView" aria-label="Chrome extension version">
+            <h2>Chrome extension version</h2>
+            <p class="lede">The same bot as a Chrome extension: click its toolbar icon and chat in a small popup, answered by the free web gateway — no key needed. Download the extension files, unzip, then in Chrome open <strong>chrome://extensions</strong>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and select the unzipped folder.</p>
+            <button class="dl-btn" type="button" id="extDownload" style="font-size:14px;padding:9px 16px">Download extension (.zip)</button>
+            <p class="lede" style="margin-top:14px">The extension saves nothing either — close the popup and the conversation is gone. It talks only to text.pollinations.ai, the same free gateway this page uses.</p>
+          </section>
+
+          <!-- Code studio: editor + live preview -->
+          <section class="studio" id="codeView" aria-label="Code runner with live preview">
+            <h2>Code studio</h2>
+            <p class="lede">Write HTML, CSS and JavaScript in the three tabs — the preview on the right rebuilds itself a moment after you stop typing, so you can watch the thing take shape as you code. The preview runs in a sandboxed frame: broken or mischievous code cannot touch this page, and whatever it prints (or breaks) shows in the output bar underneath.</p>
+            <div class="studio-grid">
+              <div class="studio-pane">
+                <div class="pane-head">
+                  <span class="pt">Editor</span>
+                  <div class="code-tabs" role="tablist" aria-label="Code language">
+                    <button type="button" role="tab" id="ctHtml" aria-selected="true">HTML</button>
+                    <button type="button" role="tab" id="ctCss" aria-selected="false">CSS</button>
+                    <button type="button" role="tab" id="ctJs" aria-selected="false">JS</button>
+                  </div>
+                  <button type="button" class="run-btn" id="studioRun" style="margin-top:0">Run ▸</button>
+                </div>
+                <textarea id="codeHtml" class="show" spellcheck="false" aria-label="HTML code"></textarea>
+                <textarea id="codeCss" spellcheck="false" aria-label="CSS code"></textarea>
+                <textarea id="codeJs" spellcheck="false" aria-label="JavaScript code"></textarea>
+              </div>
+              <div class="studio-pane">
+                <div class="pane-head"><span class="pt">Live preview</span><span id="studioState" style="font-size:12.5px;color:var(--ink-3)">Auto-updates as you type</span></div>
+                <iframe id="studioFrame" title="Live preview of your code" sandbox="allow-scripts"></iframe>
+                <div class="studio-out" id="studioOut" aria-live="polite">Output and errors will appear here.</div>
+              </div>
+            </div>
+          </section>
 
           <!-- Repos view -->
           <section class="repos" id="reposView" aria-label="Open-source repos behind this bot">
@@ -452,6 +601,15 @@
               <button class="tool-btn" type="button" id="micBtn" aria-label="Voice input" title="Voice input (mic)">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
               </button>
+              <button class="tool-btn" type="button" id="searchBtn" aria-label="Web search" title="Web search — answers use fresh web results (news, prices, weather)" aria-pressed="false">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>
+              </button>
+              <button class="tool-btn" type="button" id="compareBtn" aria-label="Compare models" title="Compare — the same question goes to 2–3 providers side by side" aria-pressed="false">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v18M16 3v18M3 8h5M3 16h5M16 8h5M16 16h5"/></svg>
+              </button>
+              <button class="tool-btn" type="button" id="callBtn" aria-label="Voice call mode" title="Voice call — talk and listen, hands-free, turn by turn">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </button>
               <button class="tool-btn" type="button" id="imgBtn" aria-label="Image mode" title="Image mode — your next message becomes a picture" aria-pressed="false">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
               </button>
@@ -494,6 +652,24 @@
         </button>
       </header>
       <p class="sub">Keys are kept only in this open page and sent only to their own provider. Reload the page and every key here is cleared.</p>
+      <div class="prov">
+        <h3>Long memory <span class="tag">Stored on this device</span></h3>
+        <p>Off by default. If you turn it on, the bot remembers facts you give it — your name, what you like, how you want answers — and uses them in later chats. <strong>Memory is stored only in this browser, on your own device (localStorage). It is never sent to any server of ours — there is none — and it is only included in a chat when you send a message, as part of that message's context to the provider you chose.</strong> Chats themselves still vanish on reload; only these memory facts stay, and only while memory is on.</p>
+        <div class="mem-row">
+          <button class="switch-btn" type="button" id="memToggle" role="switch" aria-checked="false" aria-label="Turn long memory on or off"></button>
+          <span id="memState" style="font-size:13.5px;font-weight:600">Memory is off — nothing is remembered</span>
+        </div>
+        <div id="memBody" style="display:none">
+          <label for="memInput">Add a fact to remember</label>
+          <input type="text" id="memInput" placeholder="e.g. My name is Rahim · আমি ঢাকায় থাকি · Answer me in Bangla" />
+          <div class="row">
+            <button class="test-btn" type="button" id="memAdd">Remember this</button>
+          </div>
+          <ul class="mem-list" id="memList"></ul>
+          <p style="font-size:12.5px">Tip: in chat, start a message with “Remember:” and that fact is saved here too.</p>
+          <button class="forget-btn" type="button" id="memForget">Forget everything</button>
+        </div>
+      </div>
       <div id="provSettings"></div>
       <div class="prov">
         <h3>Free web gateway <span class="tag">No key</span></h3>
@@ -512,6 +688,21 @@
         </div>
       </div>
     </aside>
+
+    <div class="export-menu" id="exportMenu" role="menu" aria-label="Export chat">
+      <button type="button" id="expMd">Download as .md</button>
+      <button type="button" id="expTxt">Download as .txt</button>
+      <button type="button" id="expShare">Share chat…</button>
+    </div>
+
+    <div class="call-overlay" id="callOverlay" role="dialog" aria-label="Voice call mode">
+      <div class="call-orb" id="callOrb">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div class="call-status" id="callStatus">Voice call</div>
+      <p class="call-last" id="callLast">Speak, hear the reply, then speak again — the call keeps going until you end it. Works best in Chrome; your voice is recognised by your browser's speech service.</p>
+      <button class="call-end" type="button" id="callEnd">End call</button>
+    </div>
 
     <div class="toast" id="toast" role="status"></div>
 
@@ -548,6 +739,16 @@
       var currentId = null;
       var sending = false;
       var imageMode = false;
+      var webSearch = false;
+      var compareMode = false;
+      var callActive = false;
+      var memoryOn = false;
+      var memoryFacts = [];
+      var LS_MEM_ON = "aichatbot.memory.enabled";
+      var LS_MEM_FACTS = "aichatbot.memory.facts";
+      function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+      function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+      function lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
       var attachedDoc = null; // {name, text}
       var view = "chat";
 
@@ -569,20 +770,67 @@
         opts = opts || {}; opts.signal = ctl.signal;
         return fetch(url, opts).finally(function () { clearTimeout(h); });
       }
+      var runSeq = 0;
       function formatBody(text) {
         var s = esc(text);
-        s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function (m, lang, code) { return "\u0001" + code + "\u0002"; });
+        s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function (m, lang, code) { return "\u0001" + (lang || "code") + "\u0003" + code + "\u0002"; });
         var blocks = s.split("\u0001");
         var out = "";
         blocks.forEach(function (part) {
           var seg = part.split("\u0002");
           if (seg.length === 2) {
-            out += "<pre><code>" + seg[0] + "</code></pre>" + renderInline(seg[1]);
+            var inner = seg[0].split("\u0003");
+            var lang = inner[0] || "code", code = inner.slice(1).join("\u0003");
+            var runnable = /^(js|javascript|html)$/i.test(lang);
+            var rid = "run" + (++runSeq);
+            out += '<div class="code-head"><span class="lang">' + esc(lang) + "</span>" +
+              (runnable ? '<button type="button" class="run-btn" data-run="' + rid + '">Run code</button>' : "") + "</div>" +
+              "<pre><code id=\"" + rid + "\">" + code + "</code></pre>" +
+              (runnable ? '<div class="run-out" id="' + rid + '-out" aria-live="polite"></div>' : "") +
+              renderInline(seg[1]);
           } else {
             out += renderInline(part);
           }
         });
         return out;
+      }
+      /* Run JS/HTML in a sandboxed iframe (no access to this page) and show console output. */
+      function runCode(codeId) {
+        var el = document.getElementById(codeId);
+        var out = document.getElementById(codeId + "-out");
+        if (!el || !out) return;
+        var code = el.textContent;
+        out.classList.add("show"); out.textContent = "Running…";
+        var token = "tok" + Date.now() + Math.floor(Math.random() * 1e6);
+        var isHtml = /<\/?(html|body|div|p|h1|span|button)/i.test(code) && !/console\.|function|=>|var |let |const /.test(code.split("\n")[0]);
+        var inner;
+        if (isHtml) {
+          inner = code + '<script>parent.postMessage({t:"' + token + '",lines:["(HTML rendered in a sandbox — no console output)"]},"*");<\/script>';
+        } else {
+          inner = "<script>var L=[];function f(a){return a.map(function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')}" +
+            "console.log=function(){L.push(f([].slice.call(arguments)))};console.error=function(){L.push('Error: '+f([].slice.call(arguments)))};" +
+            "window.onerror=function(m){L.push('Error: '+m)};" +
+            "try{\n" + code.replace(/<\/script>/gi, "<\\/script>") + "\n}catch(e){L.push('Error: '+(e&&e.message?e.message:e))}" +
+            "parent.postMessage({t:'" + token + "',lines:L},'*');<\/script>";
+        }
+        var ifr = document.createElement("iframe");
+        ifr.setAttribute("sandbox", "allow-scripts");
+        ifr.style.display = "none";
+        ifr.setAttribute("aria-hidden", "true");
+        function onMsg(ev) {
+          if (ev.source !== ifr.contentWindow || !ev.data || ev.data.t !== token) return;
+          window.removeEventListener("message", onMsg);
+          out.textContent = (ev.data.lines && ev.data.lines.length ? ev.data.lines.join("\n") : "(ran — no output)") ;
+          setTimeout(function () { ifr.remove(); }, 300);
+        }
+        window.addEventListener("message", onMsg);
+        setTimeout(function () {
+          window.removeEventListener("message", onMsg);
+          if (out.textContent === "Running…") out.textContent = "(no output after 5s — the code may still be running in its sandbox)";
+          ifr.remove();
+        }, 5000);
+        ifr.srcdoc = inner;
+        document.body.appendChild(ifr);
       }
       function renderInline(s) {
         s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
@@ -652,10 +900,31 @@
             out += '<div class="msg user"><div class="bubble">' + esc(m.content) + "</div></div>";
           } else if (m.error) {
             out += '<div class="msg ai"><div class="who"><span class="dot">A</span></div><div class="error-box">' + esc(m.content) + "</div></div>";
+          } else if (m.compare) {
+            out += '<div class="msg ai"><div class="who"><span class="dot">A</span><span class="badge">Compare — pick the best</span></div><div class="compare-grid">';
+            m.compare.forEach(function (c, ci) {
+              out += '<div class="cmp-card' + (m.chosen === ci ? " chosen" : "") + '"><h5>' + esc(c.via) + (m.chosen !== ci && m.defIdx === ci ? ' <span style="color:var(--ink-3);font-weight:600">(default until you pick)</span>' : "") + "</h5>" +
+                (c.error ? '<p style="color:var(--err)">' + esc(c.error) + "</p>" : '<div class="body">' + formatBody(c.content) + "</div>") +
+                (c.error ? "" : '<button type="button" class="use-btn" data-use="' + idx + ":" + ci + '">' + (m.chosen === ci ? "✓ Your pick — used as the answer" : "Use this answer") + "</button>") +
+                "</div>";
+            });
+            out += "</div></div>";
           } else {
+            var srcHtml = "";
+            if (m.sources && m.sources.length) {
+              srcHtml = '<div class="src-list">Sources: ' + m.sources.map(function (s) {
+                return s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.title) + "</a>" : esc(s.title);
+              }).join(" · ") + "</div>";
+            }
+            if (m.related && m.related.length) {
+              srcHtml += '<div class="src-list">Related pages: ' + m.related.map(function (s) {
+                return s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.title) + "</a>" : esc(s.title);
+              }).join(" · ") + "</div>";
+            }
             out += '<div class="msg ai"><div class="who"><span class="dot">A</span>' +
               (m.via ? '<span class="badge">via ' + esc(m.via) + "</span>" : "") + '</div><div class="body">' +
               (m.image ? '<img class="gen" alt="Generated image" src="' + esc(m.image) + '">' : formatBody(m.content)) +
+              srcHtml +
               '</div><div class="actions">' +
               '<button type="button" data-copy="' + idx + '">Copy</button>' +
               (m.image ? "" : '<button type="button" data-listen="' + idx + '">Listen</button>') +
@@ -676,6 +945,20 @@
           b.addEventListener("click", function () {
             var m = currentChat().messages[Number(this.getAttribute("data-listen"))];
             speak(m.content || "");
+          });
+        });
+        th.querySelectorAll("[data-run]").forEach(function (b) {
+          b.addEventListener("click", function () { runCode(this.getAttribute("data-run")); });
+        });
+        th.querySelectorAll("[data-use]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var parts = this.getAttribute("data-use").split(":");
+            var m = currentChat().messages[Number(parts[0])];
+            var c = m.compare[Number(parts[1])];
+            m.chosen = Number(parts[1]);
+            m.content = c.content; m.via = c.via;
+            toast("Picked: " + c.via + " — it now counts as the answer in this chat and in exports");
+            renderThread();
           });
         });
         scrollDown();
@@ -750,9 +1033,88 @@
           default: return "Reply clearly and helpfully.";
         }
       }
-      function buildMessages(chat) {
+      /* ================= Long memory (this browser only) ================= */
+      function loadMemory() {
+        memoryOn = lsGet(LS_MEM_ON) === "1";
+        try { memoryFacts = JSON.parse(lsGet(LS_MEM_FACTS) || "[]"); } catch (e) { memoryFacts = []; }
+        if (!Array.isArray(memoryFacts)) memoryFacts = [];
+      }
+      function persistMemory() {
+        lsSet(LS_MEM_ON, memoryOn ? "1" : "0");
+        lsSet(LS_MEM_FACTS, JSON.stringify(memoryFacts));
+      }
+      function addFact(f) {
+        f = (f || "").trim();
+        if (!f || memoryFacts.indexOf(f) >= 0) return;
+        memoryFacts.push(f); persistMemory(); renderMemory();
+      }
+      function renderMemory() {
+        var t = $("memToggle"); if (!t) return;
+        t.setAttribute("aria-checked", memoryOn ? "true" : "false");
+        $("memState").textContent = memoryOn ? "Memory is on — stored in this browser, and sent as context with your messages to your provider" : "Memory is off — nothing is remembered";
+        $("memBody").style.display = memoryOn ? "" : "none";
+        $("memList").innerHTML = memoryFacts.map(function (f, i) {
+          return "<li><span>" + esc(f) + '</span><button type="button" data-memdel="' + i + '" aria-label="Forget this fact">✕</button></li>';
+        }).join("") || '<li><span style="color:var(--ink-3)">Nothing remembered yet.</span></li>';
+        $("memList").querySelectorAll("[data-memdel]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            memoryFacts.splice(Number(this.getAttribute("data-memdel")), 1);
+            persistMemory(); renderMemory();
+          });
+        });
+      }
+
+      /* ================= Web search ================= */
+      function fetchSearchContext(q) {
+        var sources = [], related = [], lines = [];
+        var jobs = [];
+        if (/weather|আবহাওয়া|temperature|বৃষ্টি হবে/i.test(q)) {
+          var city = "Dhaka";
+          var mm = q.match(/(?:in|for)\s+([A-Za-z\u0980-\u09FF][A-Za-z\u0980-\u09FF .'-]*)/i);
+          if (mm) city = mm[1].replace(/\s+(today|tomorrow|now|please|এখন|আজ)\s*$/i, "").replace(/[?.!,।]\s*$/, "").trim() || "Dhaka";
+          jobs.push(fetchTimeout("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&format=json", {}, 12000)
+            .then(function (r) { return r.json(); })
+            .then(function (g) {
+              var loc = g.results && g.results[0];
+              if (!loc) throw new Error("place not found");
+              return fetchTimeout("https://api.open-meteo.com/v1/forecast?latitude=" + loc.latitude + "&longitude=" + loc.longitude + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto", {}, 12000)
+                .then(function (r) { return r.json(); })
+                .then(function (w) {
+                  var name = loc.name + (loc.country ? ", " + loc.country : "");
+                  lines.push("Live weather for " + name + ": now " + w.current.temperature_2m + "°C, humidity " + w.current.relative_humidity_2m + "%, wind " + w.current.wind_speed_10m + " km/h. Next days max/min: " +
+                    w.daily.time.map(function (d, i) { return d + " " + w.daily.temperature_2m_max[i] + "°/" + w.daily.temperature_2m_min[i] + "°C, rain chance " + (w.daily.precipitation_probability_max[i] == null ? "?" : w.daily.precipitation_probability_max[i] + "%"); }).join("; "));
+                  sources.push({ title: "Open-Meteo — " + name, url: "https://open-meteo.com/" });
+                });
+            }).catch(function () {}));
+        }
+        jobs.push(fetchTimeout("https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1", {}, 12000)
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (j.AbstractText) { lines.push(j.Heading + ": " + j.AbstractText); sources.push({ title: j.Heading || "DuckDuckGo result", url: j.AbstractURL || "" }); }
+            (j.RelatedTopics || []).slice(0, 4).forEach(function (t) {
+              if (t.Text) { lines.push(t.Text); sources.push({ title: (t.Text || "").slice(0, 60) + "…", url: t.FirstURL || "" }); }
+            });
+          }).catch(function () {}));
+        jobs.push(fetchTimeout("https://en.wikipedia.org/w/api.php?action=opensearch&search=" + encodeURIComponent(q) + "&limit=4&namespace=0&format=json&origin=*", {}, 12000)
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            (j[1] || []).forEach(function (title, i) { related.push({ title: "Wikipedia — " + title, url: (j[3] || [])[i] || "" }); });
+          }).catch(function () {}));
+        return Promise.all(jobs).then(function () {
+          if (!lines.length && !sources.length && !related.length) return null;
+          return { context: lines.join("\n"), sources: sources.slice(0, 6), related: related.slice(0, 4) };
+        });
+      }
+
+      function buildMessages(chat, searchCtx) {
         var msgs = [];
         var sys = styleSystem($("styleSel").value);
+        if (memoryOn && memoryFacts.length) {
+          sys += " Long-term memory about this user (they chose to save it on their own device): " + memoryFacts.join(" · ") + ". Use it naturally — their name, place and preferences.";
+        }
+        if (searchCtx && searchCtx.context) {
+          sys += " Fresh web search results for the latest question — prefer these over your own knowledge for news, prices and weather, and mention where a fact came from:\n" + searchCtx.context;
+        }
         if (attachedDoc) {
           sys += " The user attached a document named \"" + attachedDoc.name + "\". Answer ONLY from the document text below. If the answer is not in the document, say so plainly.\n\n--- DOCUMENT ---\n" + attachedDoc.text + "\n--- END DOCUMENT ---";
         }
@@ -825,6 +1187,18 @@
         sending = true; $("sendBtn").disabled = true;
         renderChatList(); renderThread();
 
+        function finishSend() {
+          sending = false; $("sendBtn").disabled = false;
+          renderChatList(); renderThread();
+          $("input").focus();
+          if (callActive) {
+            var last = null;
+            for (var k = chat.messages.length - 1; k >= 0; k--) { if (chat.messages[k].role === "assistant") { last = chat.messages[k]; break; } }
+            var say = last ? (last.compare ? (last.compare.filter(function (c) { return !c.error; })[0] || {}).content : (last.error ? last.content : last.content)) : "";
+            if (say) speakForCall(say); else if (callActive) startCallListening();
+          }
+        }
+
         if (imageMode) {
           var seed = Math.floor(Math.random() * 999999);
           var imgUrl = "https://image.pollinations.ai/prompt/" + encodeURIComponent(text) + "?width=1024&height=1024&seed=" + seed + "&nologo=true";
@@ -842,7 +1216,33 @@
           return;
         }
 
-        var messages = buildMessages(chat);
+        if (memoryOn) {
+          var rem = text.match(/^remember[:：]\s*(.+)/i);
+          if (rem) addFact(rem[1]);
+          var nm = text.match(/my name is ([^.,;]+)/i) || text.match(/আমার নাম\s+(\S+)/);
+          if (nm) addFact("Name: " + nm[1].trim());
+        }
+
+        var proceed = function (searchCtx) {
+        var messages = buildMessages(chat, searchCtx);
+
+        if (compareMode) {
+          var pool = ["gateway", "llm7"].concat(KEYED.filter(function (id) { return !!keys[id]; }), ["ollama"]);
+          var seen = {}, cmpIds = [];
+          pool.forEach(function (id) { if (!seen[id] && cmpIds.length < 3) { seen[id] = 1; cmpIds.push(id); } });
+          Promise.all(cmpIds.map(function (id) {
+            return callProvider(id, messages).then(function (res) { return { via: res.via, content: res.content }; })
+              .catch(function (err) { return { via: PROVIDERS[id].name, error: String(err && err.message ? err.message : err).slice(0, 160) }; });
+          })).then(function (results) {
+            var msg = { role: "assistant", compare: results, chosen: -1, content: "", sources: searchCtx ? searchCtx.sources : null, related: searchCtx ? searchCtx.related : null };
+            var first = results.filter(function (r) { return !r.error; })[0];
+            if (first) { msg.content = first.content; msg.via = first.via; msg.defIdx = results.indexOf(first); }
+            chat.messages.push(msg);
+            finishSend();
+          });
+          return;
+        }
+
         var pinned = $("providerSel").value;
         var tried = [];
         var chain;
@@ -871,19 +1271,25 @@
           }
           var id = chain[i++];
           callProvider(id, messages).then(function (res) {
-            chat.messages.push({ role: "assistant", content: res.content, via: res.via });
+            chat.messages.push({ role: "assistant", content: res.content, via: res.via, sources: searchCtx ? searchCtx.sources : null, related: searchCtx ? searchCtx.related : null });
             finishSend();
           }).catch(function (err) {
             tried.push(PROVIDERS[id].name + " (" + String(err && err.message ? err.message : err).slice(0, 90) + ")");
             attempt();
           });
         }
-        function finishSend() {
-          sending = false; $("sendBtn").disabled = false;
-          renderChatList(); renderThread();
-          $("input").focus();
-        }
         attempt();
+        };
+
+        if (webSearch) {
+          toast("Searching the web…");
+          fetchSearchContext(text).then(function (ctx) {
+            if (!ctx) toast("Web search found nothing fresh — answering as usual");
+            proceed(ctx);
+          }).catch(function () { proceed(null); });
+        } else {
+          proceed(null);
+        }
       }
 
       /* ================= Voice ================= */
@@ -894,6 +1300,234 @@
         u.lang = hasBangla(text) ? "bn-BD" : "en-US";
         window.speechSynthesis.speak(u);
       }
+      /* ================= Voice call mode ================= */
+      var callRecog = null;
+      function speakForCall(text) {
+        if (!callActive) return;
+        if (!("speechSynthesis" in window)) { startCallListening(); return; }
+        window.speechSynthesis.cancel();
+        var clean = String(text).replace(/```[\s\S]*?```/g, " code block ").replace(/[#*_>`-]/g, " ").slice(0, 700);
+        var u = new SpeechSynthesisUtterance(clean);
+        u.lang = hasBangla(clean) ? "bn-BD" : "en-US";
+        $("callStatus").textContent = "Speaking…";
+        $("callLast").textContent = clean;
+        u.onend = function () { if (callActive) startCallListening(); };
+        u.onerror = function () { if (callActive) startCallListening(); };
+        window.speechSynthesis.speak(u);
+      }
+      function startCallListening() {
+        if (!callActive) return;
+        var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { $("callStatus").textContent = "Voice needs Chrome"; return; }
+        if (callRecog) { try { callRecog.stop(); } catch (e) {} callRecog = null; }
+        callRecog = new SR();
+        callRecog.lang = $("styleSel").value === "bangla" ? "bn-BD" : "en-US";
+        callRecog.interimResults = false;
+        $("callStatus").textContent = "Listening… speak now";
+        $("callOrb").classList.add("live");
+        callRecog.onresult = function (ev) {
+          var t = ev.results[0][0].transcript;
+          $("callLast").textContent = "You: " + t;
+          $("callOrb").classList.remove("live");
+          $("input").value = t;
+          sendCurrent();
+        };
+        callRecog.onend = function () { callRecog = null; $("callOrb").classList.remove("live"); };
+        callRecog.onerror = function () { callRecog = null; $("callOrb").classList.remove("live"); if (callActive) setTimeout(startCallListening, 800); };
+        try { callRecog.start(); } catch (e) {}
+      }
+      function startCall() {
+        var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { toast("Voice call needs Chrome — this browser has no speech recognition"); return; }
+        setView("chat");
+        callActive = true;
+        $("callOverlay").classList.add("show");
+        $("callStatus").textContent = "Voice call started";
+        startCallListening();
+      }
+      function endCall() {
+        callActive = false;
+        if (callRecog) { try { callRecog.stop(); } catch (e) {} callRecog = null; }
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        $("callOverlay").classList.remove("show");
+        $("callOrb").classList.remove("live");
+      }
+
+      /* ================= Prompt library ================= */
+      var PROMPTS = [
+        { k: "Coding", t: "Fix my code", p: "আমার এই কোডে bug আছে। ভুলটা কোথায় বুঝিয়ে দাও এবং ঠিক করা কোডটা দাও:\n[paste your code here]", d: "Find the bug, explain it, give fixed code" },
+        { k: "Coding", t: "Explain code simply", p: "Explain this code line by line, in simple words, like I'm a beginner:\n[paste code]", d: "Line-by-line beginner explanation" },
+        { k: "Coding", t: "Build a small app", p: "Write a complete single-file HTML page for [describe the app, e.g. a to-do list]. Use plain HTML, CSS and JavaScript, nothing else.", d: "One-file web app from a description" },
+        { k: "Coding", t: "SQL লেখো", p: "এই কাজের জন্য SQL query লেখো: [কী ডেটা চাই, কোন table-এ কী column আছে লেখো]", d: "Describe the data, get the query" },
+        { k: "Study", t: "Teach me a topic", p: "Teach me [topic] step by step. Start very simple, give one example, then ask me one question to check I understood.", d: "Step-by-step lesson with a check question" },
+        { k: "Study", t: "পরীক্ষার প্রস্তুতি", p: "আমি [বিষয়]-এর পরীক্ষা দেব। [অধ্যায়]-এর সবচেয়ে গুরুত্বপূর্ণ ১০টি প্রশ্ন ও ছোট উত্তর বানিয়ে দাও।", d: "10 likely exam questions with short answers" },
+        { k: "Study", t: "Summarise notes", p: "Summarise this text into clear bullet points I can revise from, keeping every key fact:\n[paste your notes]", d: "Revision-ready bullet summary" },
+        { k: "Study", t: "Math, ধাপে ধাপে", p: "এই অঙ্কটা ধাপে ধাপে সমাধান করে দাও, প্রতিটা ধাপ কেন করলে বুঝিয়ে:\n[অঙ্কটা লেখো]", d: "Step-by-step maths with reasons" },
+        { k: "Writing", t: "Write a CV line", p: "Turn this into one strong CV bullet point, with a result if possible: [what you did, e.g. sold phones at a shop for 2 years]", d: "Plain duties → strong CV bullet" },
+        { k: "Writing", t: "চিঠি / আবেদন লেখো", p: "একটা ভদ্র ও পরিষ্কার আবেদনপত্র লেখো: [কার কাছে, কী চাইছো, কেন — ২-৩ লাইনে লেখো]", d: "A polite, clear formal application" },
+        { k: "Writing", t: "Make it sound better", p: "Rewrite this in clear, natural English, keeping my meaning exactly:\n[paste your text]", d: "Clean rewrite, same meaning" },
+        { k: "Writing", t: "পোস্ট লেখো", p: "আমার ছোট ব্যবসার জন্য একটা আকর্ষণীয় Facebook পোস্ট লেখো: [পণ্য/সার্ভিস, দাম, অফার থাকলে লেখো]", d: "A ready-to-post business update" }
+      ];
+      function renderPrompts() {
+        $("promptGrid").innerHTML = PROMPTS.map(function (pr, i) {
+          return '<button type="button" class="prompt-card" data-prompt="' + i + '"><span class="kind">' + esc(pr.k) + "</span><h3>" + esc(pr.t) + "</h3><p>" + esc(pr.d) + "</p></button>";
+        }).join("");
+        $("promptGrid").querySelectorAll("[data-prompt]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var pr = PROMPTS[Number(this.getAttribute("data-prompt"))];
+            setView("chat");
+            $("input").value = pr.p;
+            autoGrow(); $("input").focus();
+            toast("Prompt loaded — fill in the [brackets], then send");
+          });
+        });
+      }
+
+      /* ================= Code studio (live preview) ================= */
+      var studioTimer = null, studioInit = false;
+      var STUDIO_SAMPLE = {
+        html: '<h1>আসসালামু আলাইকুম!</h1>\n<p>This page is being built live — edit any tab and watch.</p>\n<button id="b">Tap me</button>\n<p id="n">Taps: 0</p>',
+        css: 'body { font-family: system-ui; text-align: center; padding: 30px; background: #fdf6ec; color: #33302a; }\nh1 { color: #b5502a; }\nbutton { background: #b5502a; color: #fff; border: none; padding: 10px 22px; border-radius: 999px; font-size: 16px; cursor: pointer; }',
+        js: 'var n = 0;\ndocument.getElementById("b").onclick = function () {\n  n++;\n  document.getElementById("n").textContent = "Taps: " + n;\n  console.log("tapped", n);\n};\nconsole.log("studio ready");'
+      };
+      function studioDoc() {
+        var css = $("codeCss").value, html = $("codeHtml").value, js = $("codeJs").value;
+        return '<!doctype html><html><head><meta charset="utf-8"><style>' + css.replace(/<\/style>/gi, "<\\/style>") + "</style></head><body>" +
+          html +
+          "<script>var L=[];function f(a){return a.map(function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')}" +
+          "console.log=function(){L.push(f([].slice.call(arguments)));parent.postMessage({t:'studio',lines:L.slice()},'*')};" +
+          "console.error=function(){L.push('Error: '+f([].slice.call(arguments)));parent.postMessage({t:'studio',lines:L.slice()},'*')};" +
+          "window.onerror=function(m){L.push('Error: '+m);parent.postMessage({t:'studio',lines:L.slice()},'*');};" +
+          "try{\n" + js.replace(/<\/script>/gi, "<\\/script>") + "\n}catch(e){L.push('Error: '+(e&&e.message?e.message:e));}" +
+          "parent.postMessage({t:'studio',lines:L},'*');<\/script></body></html>";
+      }
+      function renderStudio(manual) {
+        $("studioFrame").srcdoc = studioDoc();
+        $("studioState").textContent = manual ? "Run just now" : "Preview updated";
+        $("studioOut").textContent = "Running…";
+      }
+      function scheduleStudio() {
+        $("studioState").textContent = "Typing… preview in a moment";
+        clearTimeout(studioTimer);
+        studioTimer = setTimeout(function () { renderStudio(false); }, 650);
+      }
+      function initStudio() {
+        if (studioInit) return; studioInit = true;
+        $("codeHtml").value = STUDIO_SAMPLE.html;
+        $("codeCss").value = STUDIO_SAMPLE.css;
+        $("codeJs").value = STUDIO_SAMPLE.js;
+        ["codeHtml", "codeCss", "codeJs"].forEach(function (id) { $(id).addEventListener("input", scheduleStudio); });
+        $("studioRun").addEventListener("click", function () { renderStudio(true); });
+        function pick(which) {
+          [["ctHtml", "codeHtml"], ["ctCss", "codeCss"], ["ctJs", "codeJs"]].forEach(function (pair) {
+            $(pair[0]).setAttribute("aria-selected", pair[0] === which ? "true" : "false");
+            $(pair[1]).classList.toggle("show", pair[0] === which);
+          });
+        }
+        $("ctHtml").addEventListener("click", function () { pick("ctHtml"); });
+        $("ctCss").addEventListener("click", function () { pick("ctCss"); });
+        $("ctJs").addEventListener("click", function () { pick("ctJs"); });
+        window.addEventListener("message", function (ev) {
+          if (ev.source !== $("studioFrame").contentWindow || !ev.data || ev.data.t !== "studio") return;
+          var lines = ev.data.lines || [];
+          $("studioOut").innerHTML = lines.length ? lines.map(function (ln) {
+            return '<span class="' + (String(ln).indexOf("Error:") === 0 ? "err-line" : "") + '">' + esc(ln) + "</span>";
+          }).join("\n") : "(ran — no console output)";
+        });
+        renderStudio(false);
+      }
+
+      /* ================= Export ================= */
+      function chatAsText(md) {
+        var chat = currentChat();
+        if (!chat || !chat.messages.length) return "";
+        var out = md ? "# " + chat.title + "\n\n" : chat.title + "\n\n";
+        chat.messages.forEach(function (m) {
+          if (m.role === "user") out += (md ? "**You:** " : "You: ") + m.content + "\n\n";
+          else if (m.compare) {
+            m.compare.forEach(function (c) {
+              out += (md ? "**" + c.via + ":** " : c.via + ": ") + (c.error ? "(failed: " + c.error + ")" : c.content) + "\n\n";
+            });
+          } else if (m.error) out += "[Error] " + m.content + "\n\n";
+          else out += (md ? "**Assistant" + (m.via ? " (" + m.via + ")" : "") + ":** " : "Assistant: ") + (m.image ? "[Image: " + m.content + "] " + m.image : m.content) + "\n\n";
+        });
+        return out;
+      }
+      function downloadText(name, text, type) {
+        var blob = new Blob([text], { type: type || "text/plain;charset=utf-8" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      }
+      function doExport(kind) {
+        $("exportMenu").classList.remove("show");
+        var chat = currentChat();
+        if (!chat || !chat.messages.length) { toast("Nothing to export yet — send a message first"); return; }
+        var base = "ai-chat-" + new Date().toISOString().slice(0, 10);
+        if (kind === "md") downloadText(base + ".md", chatAsText(true), "text/markdown;charset=utf-8");
+        else if (kind === "txt") downloadText(base + ".txt", chatAsText(false));
+        else if (kind === "share") {
+          var txt = chatAsText(false);
+          if (navigator.share) navigator.share({ title: chat.title, text: txt }).catch(function () {});
+          else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("Chat copied — paste it anywhere to share"); }, function () { toast("Copy failed"); });
+          else toast("Sharing is not supported in this browser");
+        }
+      }
+
+      /* ================= Chrome extension download (zip, store-only) ================= */
+      var CRC_TABLE = null;
+      function crc32(bytes) {
+        if (!CRC_TABLE) {
+          CRC_TABLE = [];
+          for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); CRC_TABLE[n] = c >>> 0; }
+        }
+        var crc = 0xFFFFFFFF;
+        for (var i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+      function makeZip(files) {
+        var enc = new TextEncoder();
+        var chunks = [], central = [], offset = 0;
+        files.forEach(function (f) {
+          var name = enc.encode(f.name), data = enc.encode(f.content), crc = crc32(data);
+          var lh = new DataView(new ArrayBuffer(30));
+          lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+          lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true);
+          lh.setUint16(26, name.length, true);
+          chunks.push(new Uint8Array(lh.buffer), name, data);
+          var ch = new DataView(new ArrayBuffer(46));
+          ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+          ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true);
+          ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+          central.push(new Uint8Array(ch.buffer), name);
+          offset += 30 + name.length + data.length;
+        });
+        var cdSize = central.reduce(function (s, c) { return s + c.length; }, 0);
+        var end = new DataView(new ArrayBuffer(22));
+        end.setUint32(0, 0x06054b50, true);
+        end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+        end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+        return new Blob(chunks.concat(central, [new Uint8Array(end.buffer)]), { type: "application/zip" });
+      }
+      function downloadExtension() {
+        var manifest = JSON.stringify({ manifest_version: 3, name: "AI Chat Bot", version: "1.0.0", description: "Chat in a popup — free web gateway, no key needed.", action: { default_popup: "popup.html", default_title: "AI Chat Bot" }, permissions: [] }, null, 2);
+        var popupHtml = '<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui;width:340px;margin:0;padding:12px;background:#f6f2ea;color:#211e19}#log{height:300px;overflow-y:auto;font-size:14px;line-height:1.5}textarea{width:100%;box-sizing:border-box}button{background:#b5502a;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:600}.u{text-align:right}.u span{background:#efe7d7;border-radius:10px;padding:6px 10px;display:inline-block}.a{margin:10px 0}</style></head><body><div id="log"><p>Ask anything — English or Bangla. Answered by the free web gateway (text.pollinations.ai). Nothing is saved.</p></div><textarea id="t" rows="2" placeholder="Message…"></textarea><p><button id="s">Send</button></p><script src="popup.js"><\/script></body></html>';
+        var popupJs = 'var log=document.getElementById("log"),t=document.getElementById("t"),msgs=[];\nfunction add(cls,txt){var d=document.createElement("div");d.className=cls;d.innerHTML="";var s=document.createElement("span");s.textContent=txt;d.appendChild(s);log.appendChild(d);log.scrollTop=log.scrollHeight;}\ndocument.getElementById("s").onclick=function(){var q=t.value.trim();if(!q)return;t.value="";add("u",q);msgs.push({role:"user",content:q});fetch("https://text.pollinations.ai/openai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"openai",messages:msgs})}).then(function(r){return r.json()}).then(function(j){var a=j.choices[0].message.content;msgs.push({role:"assistant",content:a});add("a",a);}).catch(function(){add("a","No reply — the free gateway did not answer. Try again.");});};';
+        var readme = "AI Chat Bot — Chrome extension\n\n1. Unzip this file.\n2. In Chrome open chrome://extensions\n3. Turn on Developer mode (top right).\n4. Click Load unpacked and select this folder.\n5. Click the AI Chat Bot toolbar icon and chat.\n\nIt uses the free web gateway (text.pollinations.ai) — no key, and nothing is saved when the popup closes.\n";
+        var blob = makeZip([
+          { name: "manifest.json", content: manifest },
+          { name: "popup.html", content: popupHtml },
+          { name: "popup.js", content: popupJs },
+          { name: "README.txt", content: readme }
+        ]);
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = "ai-chat-bot-extension.zip";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+        toast("Extension downloaded — unzip, then Load unpacked in chrome://extensions");
+      }
+
       var recog = null;
       function toggleMic() {
         var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1009,9 +1643,17 @@
         view = v;
         $("tabChat").setAttribute("aria-selected", v === "chat" ? "true" : "false");
         $("tabRepos").setAttribute("aria-selected", v === "repos" ? "true" : "false");
+        $("tabPrompts").setAttribute("aria-selected", v === "prompts" ? "true" : "false");
+        $("tabExt").setAttribute("aria-selected", v === "ext" ? "true" : "false");
+        $("tabCode").setAttribute("aria-selected", v === "code" ? "true" : "false");
         $("reposView").classList.toggle("show", v === "repos");
-        $("thread").style.display = v === "repos" ? "none" : "";
-        $("composerWrap").style.display = v === "repos" ? "none" : "";
+        $("promptsView").classList.toggle("show", v === "prompts");
+        $("extView").classList.toggle("show", v === "ext");
+        $("codeView").classList.toggle("show", v === "code");
+        if (v === "code") initStudio();
+        var inChat = v === "chat";
+        $("thread").style.display = inChat ? "" : "none";
+        $("composerWrap").style.display = inChat ? "" : "none";
         $("scrollArea").scrollTop = 0;
       }
       function openSettings() { $("settingsPanel").classList.add("show"); $("scrim").classList.add("show"); }
@@ -1034,6 +1676,9 @@
       /* ================= Wire up ================= */
       document.addEventListener("DOMContentLoaded", function () {
         buildSettings();
+        loadMemory();
+        renderMemory();
+        renderPrompts();
         newChat();
 
         $("composerForm").addEventListener("submit", function (e) { e.preventDefault(); sendCurrent(); });
@@ -1049,6 +1694,46 @@
         $("styleSel").addEventListener("change", function () { /* style applies to next send */ });
         $("tabChat").addEventListener("click", function () { setView("chat"); });
         $("tabRepos").addEventListener("click", function () { setView("repos"); });
+        $("tabPrompts").addEventListener("click", function () { setView("prompts"); });
+        $("tabCode").addEventListener("click", function () { setView("code"); });
+        $("tabExt").addEventListener("click", function () { setView("ext"); });
+        $("searchBtn").addEventListener("click", function () {
+          webSearch = !webSearch;
+          this.classList.toggle("on", webSearch);
+          this.setAttribute("aria-pressed", webSearch ? "true" : "false");
+          toast(webSearch ? "Web search on — replies will use fresh web results with sources" : "Web search off");
+        });
+        $("compareBtn").addEventListener("click", function () {
+          compareMode = !compareMode;
+          this.classList.toggle("on", compareMode);
+          this.setAttribute("aria-pressed", compareMode ? "true" : "false");
+          toast(compareMode ? "Compare on — your next question goes to up to 3 providers side by side" : "Compare off");
+        });
+        $("callBtn").addEventListener("click", startCall);
+        $("callEnd").addEventListener("click", endCall);
+        $("exportBtn").addEventListener("click", function (e) { e.stopPropagation(); $("exportMenu").classList.toggle("show"); });
+        document.addEventListener("click", function (e) { if (!$("exportMenu").contains(e.target)) $("exportMenu").classList.remove("show"); });
+        $("expMd").addEventListener("click", function () { doExport("md"); });
+        $("expTxt").addEventListener("click", function () { doExport("txt"); });
+        $("expShare").addEventListener("click", function () { doExport("share"); });
+        $("extDownload").addEventListener("click", downloadExtension);
+        $("memToggle").addEventListener("click", function () {
+          memoryOn = !memoryOn;
+          if (!memoryOn) { /* facts stay stored but unused until re-enabled; Forget removes them */ }
+          persistMemory(); renderMemory();
+          toast(memoryOn ? "Memory on — facts are stored in this browser and ride along as context in your messages" : "Memory off — the bot will not use or save facts");
+        });
+        $("memAdd").addEventListener("click", function () {
+          var v = $("memInput").value;
+          if (v.trim()) { addFact(v); $("memInput").value = ""; toast("Remembered — stored on this device, used as context in your chats"); }
+        });
+        $("memInput").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); $("memAdd").click(); } });
+        $("memForget").addEventListener("click", function () {
+          memoryFacts = []; memoryOn = false;
+          lsDel(LS_MEM_FACTS); lsDel(LS_MEM_ON);
+          renderMemory();
+          toast("Forgotten — all memory erased from this browser");
+        });
         $("settingsBtn").addEventListener("click", openSettings);
         $("settingsClose").addEventListener("click", closeSettings);
         $("scrim").addEventListener("click", closeSettings);
