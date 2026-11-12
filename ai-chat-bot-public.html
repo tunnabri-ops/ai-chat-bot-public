@@ -415,6 +415,25 @@
       .gal-btns { display: flex; gap: 6px; padding: 6px 11px 11px; flex-wrap: wrap; }
       .gal-btns .dl-btn { margin-top: 0; text-decoration: none; display: inline-flex; align-items: center; }
 
+      /* Morning briefing — structured live-data blocks (rendered from fetched
+         Open-Meteo / DuckDuckGo values, never from model prose) */
+      .brief-intro p { margin: 0 0 10px; }
+      .brief-block { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 10px; background: var(--surface); }
+      .brief-head { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 8px; }
+      .bw-place { font-weight: 700; font-size: 15px; }
+      .bw-date { color: var(--ink-3); font-size: 13px; font-weight: 400; }
+      .bw-main { display: flex; align-items: baseline; gap: 12px; margin: 3px 0 2px; flex-wrap: wrap; }
+      .bw-temp { font-family: var(--serif); font-size: 32px; font-weight: 600; line-height: 1; }
+      .bw-cond { color: var(--ink-2); font-size: 15px; }
+      .bw-sub { font-size: 13.5px; color: var(--ink-2); }
+      .brief-news { margin: 0; padding-left: 20px; }
+      .brief-news li { margin-bottom: 7px; }
+      .brief-news li:last-child { margin-bottom: 0; }
+      .brief-news a { color: var(--ink); font-weight: 600; text-decoration: none; }
+      .brief-news a:hover { text-decoration: underline; }
+      .bn-src { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; }
+      .brief-fail { color: var(--err); margin: 0; font-size: 14px; }
+
       /* Personas */
       .prompt-card.active-persona { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
       .persona-form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px 16px; max-width: 640px; }
@@ -1094,7 +1113,7 @@
             out += '<div class="msg ai"><div class="who"><span class="dot">A</span>' +
               (m.via ? '<span class="badge">via ' + esc(m.via) + "</span>" : "") +
               (m.persona ? '<span class="badge">' + esc(m.persona) + "</span>" : "") + '</div><div class="body">' +
-              (m.image ? '<img class="gen" alt="Generated image" src="' + esc(m.image) + '">' : formatBody(m.content)) +
+              (m.briefing ? briefingHtml(m.briefing) : m.image ? '<img class="gen" alt="Generated image" src="' + esc(m.image) + '">' : formatBody(m.content)) +
               srcHtml +
               '</div><div class="actions">' +
               '<button type="button" data-copy="' + idx + '">Copy</button>' +
@@ -1610,7 +1629,14 @@
         var wasImage = false;
         for (var j = ui + 1; j < chat.messages.length; j++) if (chat.messages[j].image) wasImage = true;
         var text = chat.messages[ui].content;
+        var bCity = chat.messages[ui].briefingCity, bLabel = chat.messages[ui].briefingCityLabel;
         chat.messages.length = ui + 1;
+        if (bCity) {
+          // A briefing is live data, not model prose — Regenerate re-fetches it fresh.
+          chat.messages.length = ui;
+          startBriefing(bCity, bLabel || bCity);
+          return;
+        }
         runSend(chat, text, wasImage);
       }
 
@@ -1811,58 +1837,267 @@
       }
 
       /* ================= Morning briefing (সকালের ব্রিফিং) =================
-         Reuses the exact web-search code path: weather from Open-Meteo and
-         headlines from DuckDuckGo, via fetchSearchContext — no new provider. */
+         Live data FIRST, model second. Weather and headlines are fetched as
+         structured data from the same free endpoints web search uses
+         (Open-Meteo + DuckDuckGo) and rendered into the reply by code,
+         verbatim — the provider is only asked for a short neutral Bangla
+         intro and is told never to state facts itself. The briefing is built
+         WITHOUT buildMessages, so no active persona, tutor style, memory or
+         attached document can leak into it. */
+      function weatherConditionBn(code) {
+        var c = Number(code);
+        if (c === 0) return "পরিষ্কার আকাশ (clear sky)";
+        if (c === 1) return "মূলত পরিষ্কার (mainly clear)";
+        if (c === 2) return "আংশিক মেঘলা (partly cloudy)";
+        if (c === 3) return "মেঘলা (overcast)";
+        if (c === 45 || c === 48) return "কুয়াশা (fog)";
+        if (c === 51 || c === 53 || c === 55) return "গুঁড়ি গুঁড়ি বৃষ্টি (drizzle)";
+        if (c === 56 || c === 57) return "হিম গুঁড়ি বৃষ্টি (freezing drizzle)";
+        if (c === 61) return "হালকা বৃষ্টি (light rain)";
+        if (c === 63) return "মাঝারি বৃষ্টি (moderate rain)";
+        if (c === 65) return "ভারী বৃষ্টি (heavy rain)";
+        if (c === 66 || c === 67) return "হিম বৃষ্টি (freezing rain)";
+        if (c === 71 || c === 73 || c === 75) return "তুষারপাত (snow)";
+        if (c === 77) return "তুষারকণা (snow grains)";
+        if (c === 80) return "হালকা বৃষ্টির ঝাপটা (light showers)";
+        if (c === 81) return "মাঝারি বৃষ্টির ঝাপটা (showers)";
+        if (c === 82) return "ভারী বৃষ্টির ঝাপটা (violent showers)";
+        if (c === 85 || c === 86) return "তুষার ঝাপটা (snow showers)";
+        if (c === 95) return "বজ্রঝড় (thunderstorm)";
+        if (c === 96 || c === 99) return "শিলাসহ বজ্রঝড় (thunderstorm with hail)";
+        return "আবহাওয়ার ধরন জানা যায়নি";
+      }
+
+      /* Structured weather — same Open-Meteo endpoints fetchSearchContext
+         uses, but returns the raw values instead of prose context.
+         Resolves to null on any failure so the UI can say so honestly. */
+      function fetchBriefingWeather(city) {
+        return fetchTimeout("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&format=json", {}, 12000)
+          .then(function (r) { return r.json(); })
+          .then(function (g) {
+            var loc = g.results && g.results[0];
+            if (!loc) throw new Error("place not found");
+            return fetchTimeout("https://api.open-meteo.com/v1/forecast?latitude=" + loc.latitude + "&longitude=" + loc.longitude + "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=auto", {}, 12000)
+              .then(function (r) { return r.json(); })
+              .then(function (w) {
+                if (!w.current || !w.daily || !w.daily.time || !w.daily.time.length) throw new Error("no weather data");
+                return {
+                  place: loc.name + (loc.country ? ", " + loc.country : ""),
+                  date: w.daily.time[0],
+                  tempNow: w.current.temperature_2m,
+                  tempMax: w.daily.temperature_2m_max[0],
+                  tempMin: w.daily.temperature_2m_min[0],
+                  rainChance: w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[0] : null,
+                  code: w.current.weather_code
+                };
+              });
+          })
+          .catch(function () { return null; });
+      }
+
+      function hostLabel(url) {
+        var m = String(url || "").match(/^https?:\/\/([^/?#]+)/i);
+        return m ? m[1].replace(/^www\./i, "") : "";
+      }
+      function headlineTitle(text) {
+        var t = String(text || "").replace(/\s+/g, " ").trim();
+        var cut = t.search(/[.!?।]\s/);
+        if (cut >= 30) t = t.slice(0, cut + 1);
+        if (t.length > 130) t = t.slice(0, 130).trim() + "…";
+        return t;
+      }
+
+      /* Structured headlines from DuckDuckGo — the same instant-answer
+         endpoint web search uses. News phrasings can come back empty there,
+         so a few are tried in order and the real results accumulated.
+         Resolves to an array (possibly empty) of {title, source, url};
+         every entry is a fetched result — nothing is ever made up here. */
+      function fetchBriefingNews() {
+        var queries = ["latest news headlines today", "Bangladesh news headlines today", "top world news headlines"];
+        var found = [], seen = {};
+        function add(item) {
+          if (!item.url || seen[item.url] || found.length >= 5) return;
+          seen[item.url] = 1; found.push(item);
+        }
+        function one(q) {
+          return fetchTimeout("https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1", {}, 12000)
+            .then(function (r) { return r.json(); })
+            .then(function (j) {
+              if (j.AbstractText && j.AbstractURL) {
+                add({ title: headlineTitle(j.Heading ? j.Heading + " — " + j.AbstractText : j.AbstractText), source: j.AbstractSource || hostLabel(j.AbstractURL), url: j.AbstractURL });
+              }
+              (j.RelatedTopics || []).forEach(function (t) {
+                var list = t.Topics ? t.Topics : [t];
+                list.forEach(function (x) {
+                  if (x.Text && x.FirstURL) add({ title: headlineTitle(x.Text), source: hostLabel(x.FirstURL), url: x.FirstURL });
+                });
+              });
+            })
+            .catch(function () {});
+        }
+        var chain = Promise.resolve();
+        queries.forEach(function (q) {
+          chain = chain.then(function () { if (found.length < 3) return one(q); });
+        });
+        return chain.then(function () { return found; });
+      }
+
+      /* Sources line for a briefing — built only from fetched data. */
+      function briefingSources(b) {
+        var out = [], seen = {};
+        function push(title, url) {
+          var k = title + "|" + (url || "");
+          if (!url || seen[k] || out.length >= 7) return;
+          seen[k] = 1; out.push({ title: title, url: url });
+        }
+        if (b.weather) push("Open-Meteo — " + b.weather.place, "https://open-meteo.com/");
+        (b.headlines || []).forEach(function (h) { push(h.source || h.title, h.url); });
+        return out;
+      }
+      /* The briefing reply body is rendered HERE, from fetched values only. */
+      function briefingHtml(b) {
+        var h = "";
+        if (b.intro) h += '<div class="brief-intro">' + formatBody(b.intro) + "</div>";
+        h += '<div class="brief-block"><div class="brief-head">আবহাওয়া · Weather</div>';
+        if (b.weather) {
+          var w = b.weather;
+          h += '<div class="bw-place">' + esc(w.place) + ' <span class="bw-date">· ' + esc(w.date) + "</span></div>" +
+            '<div class="bw-main"><span class="bw-temp">' + esc(w.tempNow) + '°C</span><span class="bw-cond">' + esc(weatherConditionBn(w.code)) + "</span></div>" +
+            '<div class="bw-sub">আজ সর্বোচ্চ ' + esc(w.tempMax) + "°C · সর্বনিম্ন " + esc(w.tempMin) + "°C · বৃষ্টির সম্ভাবনা " +
+            (w.rainChance == null ? "জানা যায়নি" : esc(w.rainChance) + "%") + "</div>";
+        } else {
+          h += '<p class="brief-fail">আবহাওয়া আনা যায়নি — লাইভ আবহাওয়া সার্ভিস থেকে এই মুহূর্তে তথ্য পাওয়া যায়নি।</p>';
+        }
+        h += '</div><div class="brief-block"><div class="brief-head">তাজা খবর · Top headlines</div>';
+        if (b.headlines && b.headlines.length) {
+          h += '<ol class="brief-news">';
+          b.headlines.forEach(function (it) {
+            h += "<li>" + (it.url ? '<a href="' + esc(it.url) + '" target="_blank" rel="noopener">' + esc(it.title) + "</a>" : esc(it.title)) +
+              (it.source ? ' <span class="bn-src">— ' + esc(it.source) + "</span>" : "") + "</li>";
+          });
+          h += "</ol>";
+        } else {
+          h += '<p class="brief-fail">খবর আনা যায়নি — এই মুহূর্তে তাজা খবর পাওয়া যায়নি।</p>';
+        }
+        h += "</div>";
+        var srcs = briefingSources(b);
+        if (srcs.length) {
+          h += '<div class="src-list">সূত্র / Sources: ' + srcs.map(function (s) {
+            return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.title) + "</a>";
+          }).join(" · ") + "</div>";
+        }
+        return h;
+      }
+      /* Plain-text twin of the blocks above — used for Copy, Listen, export
+         and as this reply's text when later messages build their context. */
+      function briefingPlainText(b) {
+        var lines = [];
+        if (b.intro) lines.push(b.intro, "");
+        if (b.weather) {
+          var w = b.weather;
+          lines.push("আবহাওয়া — " + w.place + " · " + w.date);
+          lines.push("এখন " + w.tempNow + "°C, " + weatherConditionBn(w.code) + "। আজ সর্বোচ্চ " + w.tempMax + "°C · সর্বনিম্ন " + w.tempMin + "°C · বৃষ্টির সম্ভাবনা " + (w.rainChance == null ? "জানা যায়নি" : w.rainChance + "%"));
+        } else {
+          lines.push("আবহাওয়া আনা যায়নি");
+        }
+        lines.push("");
+        if (b.headlines && b.headlines.length) {
+          lines.push("তাজা খবর:");
+          b.headlines.forEach(function (it, i) { lines.push((i + 1) + ". " + it.title + (it.source ? " (" + it.source + ")" : "") + (it.url ? " " + it.url : "")); });
+        } else {
+          lines.push("খবর আনা যায়নি");
+        }
+        var srcs = briefingSources(b);
+        if (srcs.length) lines.push("", "সূত্র / Sources: " + srcs.map(function (s) { return s.title + " " + s.url; }).join(" · "));
+        return lines.join("\n");
+      }
+      /* The provider only writes the intro. If it slips a figure in anyway
+         (° or % — the shape of an invented temperature / rain chance), that
+         sentence is dropped; the fetched blocks carry the real numbers. */
+      function briefingIntro(text) {
+        var t = String(text || "").replace(/[#>*`_]/g, "").replace(/\s+/g, " ").trim();
+        var sentences = t.match(/[^.!?।]+[.!?।]*/g) || [t];
+        var kept = sentences.filter(function (s) {
+          s = s.trim();
+          return s && s.indexOf("°") < 0 && s.indexOf("%") < 0 && !/^[0-9\u09E6-\u09EF]/.test(s);
+        });
+        t = kept.join(" ").trim();
+        if (t.length > 280) t = t.slice(0, 280).trim() + "…";
+        return t;
+      }
+
       function morningBriefing() {
         if (sending) { toast("আগের উত্তরটা শেষ হোক — অথবা Stop চাপো"); return; }
-        setView("chat");
         var typed = $("input").value.trim();
-        var city = typed || "Dhaka";
-        var cityLabel = typed || "ঢাকা (Dhaka)";
         $("input").value = ""; autoGrow();
+        startBriefing(typed || "Dhaka", typed || "ঢাকা (Dhaka)");
+      }
+      function startBriefing(city, cityLabel) {
+        if (sending) { toast("আগের উত্তরটা শেষ হোক — অথবা Stop চাপো"); return; }
+        setView("chat");
         var chat = ensureChat();
-        chat.messages.push({ role: "user", content: "সকালের ব্রিফিং দাও — আজকের আবহাওয়া (" + cityLabel + ") আর তাজা খবর" });
+        chat.messages.push({ role: "user", content: "সকালের ব্রিফিং দাও — আজকের আবহাওয়া (" + cityLabel + ") আর তাজা খবর", briefingCity: city, briefingCityLabel: cityLabel });
         if (chat.title === "New chat") chat.title = "সকালের ব্রিফিং";
         var myGen = ++sendGen;
         sending = true; setSendStopUI(true);
         renderChatList(); renderThread();
         toast("ব্রিফিং তৈরি হচ্ছে — লাইভ আবহাওয়া আর তাজা খবর আনা হচ্ছে…");
-        var weatherQ = "weather in " + city + " today";
-        var newsQ = "latest news headlines today";
-        Promise.all([fetchSearchContext(weatherQ), fetchSearchContext(newsQ)]).then(function (rs) {
+        // 1) Fetch the live data FIRST and wait for both (each fetch carries
+        //    its own timeout via fetchTimeout). No data — no invented briefing.
+        Promise.all([fetchBriefingWeather(city), fetchBriefingNews()]).then(function (rs) {
           if (myGen !== sendGen) return;
-          var w = rs[0], n = rs[1];
-          var ctxLines = [];
-          ctxLines.push("আবহাওয়া (" + city + "): " + (w && w.context ? w.context : "লাইভ আবহাওয়ার তথ্য পাওয়া যায়নি।"));
-          ctxLines.push("তাজা খবর: " + (n && n.context ? n.context : "তাজা খবরের তথ্য পাওয়া যায়নি।"));
-          var sources = [], seenSrc = {};
-          [w, n].forEach(function (r) {
-            if (!r) return;
-            (r.sources || []).forEach(function (s) {
-              var k = s.title + "|" + (s.url || "");
-              if (!seenSrc[k] && sources.length < 6) { seenSrc[k] = 1; sources.push(s); }
-            });
-          });
-          var merged = { context: ctxLines.join("\n"), sources: sources, related: n ? n.related : [] };
-          var messages = buildMessages(chat, merged, null);
-          messages[0].content += " The user asked for a MORNING BRIEFING (সকালের ব্রিফিং). Write ONE single reply, entirely in Bangla (Bengali): start with a short warm greeting, then today's weather for " + city + " — the temperature and the chance of rain — using ONLY the weather data above, then the top fresh news headlines as a short numbered list using ONLY the news data above. If the data above says the weather or the news could not be found, say that honestly in Bangla. NEVER invent temperatures, rain chances, or headlines.";
-          runChain(messages, function (res, tried, pinned) {
-            if (myGen !== sendGen) return;
+          var weather = rs[0], headlines = rs[1] || [];
+          if (!weather && !headlines.length) {
             sending = false; setSendStopUI(false);
-            if (res) {
-              chat.messages.push({ role: "assistant", content: res.content, via: res.via, persona: activePersonaName(), sources: sources.length ? sources : null, related: merged.related });
-            } else {
-              var detail;
-              if (pinned === "auto") {
-                detail = "ব্রিফিং তৈরি করা গেল না — কোনো provider উত্তর দেয়নি। চেষ্টা করা হয়েছে: " + tried.join(" · ") + "।" +
-                  (KEYED.some(function (k) { return !keys[k]; }) ? " Groq, OpenRouter, Gemini আর Mistral-এর key Settings-এ না দিলে সেগুলো বাদ থাকে।" : "");
-              } else {
-                detail = "ব্রিফিং তৈরি করা গেল না — " + PROVIDERS[pinned].name + " উত্তর দেয়নি। " + (tried[0] || "");
-              }
-              chat.messages.push({ role: "assistant", error: true, content: detail });
-            }
+            chat.messages.push({ role: "assistant", error: true, content: "ব্রিফিং আনা গেল না — আবহাওয়া আনা যায়নি, খবরও আনা যায়নি। লাইভ সার্ভিসগুলো এই মুহূর্তে সাড়া দিচ্ছে না; ইন্টারনেট সংযোগ দেখে একটু পরে আবার চেষ্টা করো। কোনো আবহাওয়া বা খবর বানিয়ে দেওয়া হয়নি।" });
             renderChatList(); renderThread();
             $("input").focus();
+            return;
+          }
+          // 2) The provider writes ONLY a short neutral intro around the
+          //    fetched blocks. The system prompt is assembled here rather
+          //    than via buildMessages, so the briefing stays persona-free.
+          var facts = [];
+          if (weather) facts.push("Weather in " + weather.place + " on " + weather.date + ": now " + weather.tempNow + "°C, high " + weather.tempMax + "°C, low " + weather.tempMin + "°C, rain chance " + (weather.rainChance == null ? "unknown" : weather.rainChance + "%") + ".");
+          else facts.push("Weather could not be fetched (the reply itself shows: আবহাওয়া আনা যায়নি).");
+          if (headlines.length) headlines.forEach(function (hd, i) { facts.push("Headline " + (i + 1) + ": " + hd.title); });
+          else facts.push("News could not be fetched (the reply itself shows: খবর আনা যায়নি).");
+          var sys = "You write ONLY the short opening of a morning briefing (সকালের ব্রিফিং), in Bangla (Bengali). Reply with 1-2 short, warm sentences: a greeting, and at most one general sentence saying that today's weather and the top headlines follow below. The facts listed below are shown to the user separately, in structured blocks directly under your text. NEVER state any temperature, rain chance, percentage, date or headline yourself, and NEVER invent weather numbers or news — refer to the facts only in general words. Use ONLY the supplied data. Plain, neutral news tone: no persona, no character, no storytelling style.\n\nFACTS (context only — do not quote figures or headlines from here):\n" + facts.join("\n");
+          var messages = [{ role: "system", content: sys }, { role: "user", content: "সকালের ব্রিফিংয়ের শুরুর দু-এক লাইন লেখো।" }];
+          var deliver = function (intro, via) {
+            if (myGen !== sendGen) return;
+            sending = false; setSendStopUI(false);
+            var b = { weather: weather, headlines: headlines, intro: intro || "" };
+            chat.messages.push({ role: "assistant", content: briefingPlainText(b), briefing: b, via: via });
+            renderChatList(); renderThread();
+            $("input").focus();
+          };
+          var fail = function (tried, pinned) {
+            if (myGen !== sendGen) return;
+            sending = false; setSendStopUI(false);
+            var detail;
+            if (pinned === "auto") {
+              detail = "ব্রিফিং তৈরি করা গেল না — কোনো provider উত্তর দেয়নি। চেষ্টা করা হয়েছে: " + tried.join(" · ") + "।" +
+                (KEYED.some(function (k) { return !keys[k]; }) ? " Groq, OpenRouter, Gemini আর Mistral-এর key Settings-এ না দিলে সেগুলো বাদ থাকে।" : "");
+            } else {
+              detail = "ব্রিফিং তৈরি করা গেল না — " + PROVIDERS[pinned].name + " উত্তর দেয়নি। " + (tried[0] || "");
+            }
+            chat.messages.push({ role: "assistant", error: true, content: detail });
+            renderChatList(); renderThread();
+            $("input").focus();
+          };
+          runChain(messages, function (res, tried, pinned) {
+            if (myGen !== sendGen) return;
+            if (res) { deliver(briefingIntro(res.content), res.via); return; }
+            // Chain failed — one more try straight at the free gateway
+            // (callGateway itself already falls back POST -> plain-text GET).
+            var triedAll = tried.slice();
+            callGateway(messages).then(function (g) {
+              deliver(briefingIntro(g.content), g.via);
+            }).catch(function (err) {
+              triedAll.push("Free web gateway (" + String(err && err.message ? err.message : err).slice(0, 90) + ")");
+              fail(triedAll, pinned);
+            });
           });
         });
       }
