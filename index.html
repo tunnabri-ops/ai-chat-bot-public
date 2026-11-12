@@ -105,7 +105,7 @@
         position: relative;
         display: block; width: 100%;
         background: none; border: 1px solid transparent; text-align: left;
-        padding: 8px 36px 8px 10px; border-radius: 9px; font-size: 14.5px;
+        padding: 8px 68px 8px 10px; border-radius: 9px; font-size: 14.5px;
         color: var(--ink); min-height: 2.5rem;
       }
       .chat-item:hover { background: var(--surface-2); }
@@ -356,6 +356,65 @@
       .mem-list li button { background: none; border: none; color: var(--err); font-weight: 700; min-height: 2rem; min-width: 2rem; }
       .forget-btn { background: none; border: 1px solid var(--err); color: var(--err); border-radius: 9px; padding: 6px 13px; font-weight: 600; font-size: 13.5px; min-height: 2.3rem; }
 
+      /* Tutor bar, AI tools bar, chat folders, image gallery */
+      .tutor-bar { display: none; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 4px 8px; }
+      .tutor-bar.show { display: flex; }
+      .tutor-bar .tutor-label { font-weight: 700; font-size: 13px; color: var(--accent-ink); margin-right: 2px; }
+      .tutor-bar button {
+        background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent);
+        border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; min-height: 2rem;
+      }
+      .tutor-bar button:hover { background: var(--surface-2); }
+      .tools-bar { max-width: 760px; margin: 0 auto 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .tools-bar .tools-label { font-size: 12px; font-weight: 700; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; }
+      .tools-bar button {
+        background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px;
+        padding: 5px 13px; font-size: 13px; font-weight: 600; min-height: 2.1rem; color: var(--ink-2);
+      }
+      .tools-bar button:hover { border-color: var(--accent); color: var(--accent-ink); }
+      .side-folders { padding: 6px 14px 2px; }
+      .folder-add-btn {
+        width: 100%; background: none; border: 1px dashed var(--line-2); color: var(--ink-2);
+        border-radius: 9px; padding: 6px 10px; font-size: 13px; font-weight: 600; min-height: 2.2rem;
+      }
+      .folder-add-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+      .folder-form { display: none; gap: 6px; margin-top: 6px; }
+      .folder-form.show { display: flex; }
+      .folder-form input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; font-size: 13.5px; }
+      .folder-form button { background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 7px 13px; font-weight: 600; font-size: 13.5px; flex: 0 0 auto; }
+      .folder-head {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--ink-3); margin: 14px 8px 6px; font-weight: 700;
+      }
+      .folder-head span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .folder-head .folder-del { background: none; border: none; color: var(--ink-3); border-radius: 6px; padding: 2px 6px; min-height: 1.8rem; min-width: 1.8rem; font-size: 12px; }
+      .folder-head .folder-del:hover { color: var(--err); }
+      .chat-item .fold {
+        position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; color: var(--ink-3);
+        border-radius: 6px; padding: 2px 6px; min-height: 2rem; min-width: 2rem;
+        display: none; align-items: center; justify-content: center;
+      }
+      .chat-item:hover .fold, .chat-item.active .fold, .chat-item:focus-visible .fold { display: inline-flex; }
+      .chat-item .fold:hover { color: var(--accent-ink); }
+      .folder-menu {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+        box-shadow: var(--shadow); padding: 4px; margin: 2px 4px 8px;
+      }
+      .folder-menu button {
+        display: block; width: 100%; text-align: left; background: none; border: none;
+        border-radius: 7px; padding: 7px 10px; font-size: 13.5px; min-height: 2.1rem;
+      }
+      .folder-menu button:hover { background: var(--surface-2); }
+      .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+      .gal-card { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+      .gal-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--surface-2); }
+      .gal-card figcaption { padding: 9px 11px 4px; font-size: 13px; overflow-wrap: anywhere; }
+      .gal-card figcaption span { display: block; color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+      .gal-btns { display: flex; gap: 6px; padding: 6px 11px 11px; flex-wrap: wrap; }
+      .gal-btns .dl-btn { margin-top: 0; text-decoration: none; display: inline-flex; align-items: center; }
+
       /* Code studio (live preview) */
       @media (max-width: 820px) {
         .topbar { flex-wrap: wrap; }
@@ -468,6 +527,13 @@
         <div class="side-search">
           <input type="search" id="chatSearch" placeholder="Search chats in this session" aria-label="Search chats" />
         </div>
+        <div class="side-folders">
+          <button type="button" class="folder-add-btn" id="folderAddBtn">+ New folder · ফোল্ডার</button>
+          <div class="folder-form" id="folderForm">
+            <input type="text" id="folderName" placeholder="Folder name — ফোল্ডারের নাম" aria-label="Folder name" maxlength="40" />
+            <button type="button" id="folderCreate">Add</button>
+          </div>
+        </div>
         <nav class="chat-list" id="chatList" aria-label="Chat history"></nav>
       </aside>
       <div class="side-scrim" id="sideScrim"></div>
@@ -482,6 +548,7 @@
             <button type="button" role="tab" id="tabChat" aria-selected="true">Chat</button>
             <button type="button" role="tab" id="tabPrompts" aria-selected="false">Prompts</button>
             <button type="button" role="tab" id="tabCode" aria-selected="false">Code</button>
+            <button type="button" role="tab" id="tabGallery" aria-selected="false">Gallery</button>
             <button type="button" role="tab" id="tabExt" aria-selected="false">Extension</button>
             <button type="button" role="tab" id="tabRepos" aria-selected="false">Repos</button>
           </div>
@@ -549,6 +616,13 @@
             </div>
           </section>
 
+          <!-- Image gallery -->
+          <section class="panel-view" id="galleryView" aria-label="Image gallery">
+            <h2>ছবির গ্যালারি · Image gallery</h2>
+            <p class="lede">Every picture generated in your chats collects here for this session — open one full size, or download it. Reload the page and the gallery clears, just like the chats.</p>
+            <div class="gallery-grid" id="galleryGrid"></div>
+          </section>
+
           <!-- Repos view -->
           <section class="repos" id="reposView" aria-label="Open-source repos behind this bot">
             <h2>Built from open-source repos</h2>
@@ -580,11 +654,24 @@
 
         <!-- Composer -->
         <div class="composer-wrap" id="composerWrap">
+          <div class="tools-bar" id="toolsBar" role="group" aria-label="AI tools — one click">
+            <span class="tools-label">AI tools</span>
+            <button type="button" data-tool="bn">অনুবাদ → বাংলা</button>
+            <button type="button" data-tool="en">Translate → English</button>
+            <button type="button" data-tool="para">Paraphrase</button>
+            <button type="button" data-tool="fix">বানান ও ব্যাকরণ ঠিক করো</button>
+          </div>
           <form class="composer" id="composerForm">
             <div class="doc-chip" id="docChip">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
               <span id="docName">document</span>
               <button class="x" type="button" id="docRemove" aria-label="Remove document">✕</button>
+            </div>
+            <div class="tutor-bar" id="tutorBar">
+              <span class="tutor-label">বাংলা শিক্ষক:</span>
+              <button type="button" data-tutor="explain">বুঝিয়ে দাও</button>
+              <button type="button" data-tutor="quiz">কুইজ নাও</button>
+              <button type="button" data-tutor="exam">পরীক্ষার প্রস্তুতি</button>
             </div>
             <textarea id="input" rows="2" placeholder="Message the bot — বাংলাতেও লিখতে পারো…" aria-label="Your message"></textarea>
             <div class="composer-row">
@@ -600,6 +687,9 @@
               </button>
               <button class="tool-btn" type="button" id="compareBtn" aria-label="Compare models" title="Compare — the same question goes to 2–3 providers side by side" aria-pressed="false">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v18M16 3v18M3 8h5M3 16h5M16 8h5M16 16h5"/></svg>
+              </button>
+              <button class="tool-btn" type="button" id="tutorBtn" aria-label="Bengali tutor mode" title="বাংলা শিক্ষক — Bengali tutor: lessons explained in Bangla, quizzes, exam prep" aria-pressed="false">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg>
               </button>
               <button class="tool-btn" type="button" id="callBtn" aria-label="Voice call mode" title="Voice call — talk and listen, hands-free, turn by turn">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -745,6 +835,11 @@
       function lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
       var attachedDoc = null; // {name, text}
       var view = "chat";
+      var tutorMode = false;
+      var folders = [];        // {id, name} — session only, like the chats themselves
+      var openMoveFor = null;  // chat id whose "move to folder" menu is open
+      var sendGen = 0;         // bumped on every send and on Stop — stale replies are dropped
+      var liveCtls = [];       // AbortControllers of in-flight fetches, so Stop can cancel them
 
       /* ================= Helpers ================= */
       function $(id) { return document.getElementById(id); }
@@ -760,9 +855,16 @@
       function hasBangla(s) { return /[\u0980-\u09FF]/.test(s || ""); }
       function fetchTimeout(url, opts, ms) {
         var ctl = new AbortController();
+        liveCtls.push(ctl);
         var h = setTimeout(function () { ctl.abort(); }, ms || 45000);
         opts = opts || {}; opts.signal = ctl.signal;
-        return fetch(url, opts).finally(function () { clearTimeout(h); });
+        return fetch(url, opts).finally(function () {
+          clearTimeout(h);
+          var ix = liveCtls.indexOf(ctl); if (ix >= 0) liveCtls.splice(ix, 1);
+        });
+      }
+      function stopAllFetches() {
+        liveCtls.slice().forEach(function (c) { try { c.abort(); } catch (e) {} });
       }
       var runSeq = 0;
       function formatBody(text) {
@@ -889,11 +991,14 @@
           return;
         }
         var out = "";
+        var lastAi = -1;
+        chat.messages.forEach(function (m, li) { if (m.role === "assistant") lastAi = li; });
         chat.messages.forEach(function (m, idx) {
           if (m.role === "user") {
             out += '<div class="msg user"><div class="bubble">' + esc(m.content) + "</div></div>";
           } else if (m.error) {
-            out += '<div class="msg ai"><div class="who"><span class="dot">A</span></div><div class="error-box">' + esc(m.content) + "</div></div>";
+            out += '<div class="msg ai"><div class="who"><span class="dot">A</span></div><div class="error-box">' + esc(m.content) + "</div>" +
+              (idx === lastAi && !sending ? '<div class="actions"><button type="button" data-regen="' + idx + '">Regenerate</button></div>' : "") + "</div>";
           } else if (m.compare) {
             out += '<div class="msg ai"><div class="who"><span class="dot">A</span><span class="badge">Compare — pick the best</span></div><div class="compare-grid">';
             m.compare.forEach(function (c, ci) {
@@ -922,6 +1027,7 @@
               '</div><div class="actions">' +
               '<button type="button" data-copy="' + idx + '">Copy</button>' +
               (m.image ? "" : '<button type="button" data-listen="' + idx + '">Listen</button>') +
+              (idx === lastAi && !sending ? '<button type="button" data-regen="' + idx + '">Regenerate</button>' : "") +
               "</div></div>";
           }
         });
@@ -955,9 +1061,33 @@
             renderThread();
           });
         });
+        th.querySelectorAll("[data-regen]").forEach(function (b) {
+          b.addEventListener("click", function () { regenerate(); });
+        });
         scrollDown();
       }
 
+      /* ================= Chat folders (session only) ================= */
+      function folderById(id) {
+        for (var i = 0; i < folders.length; i++) if (folders[i].id === id) return folders[i];
+        return null;
+      }
+      var FOLDER_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+      function chatItemHtml(c) {
+        var h = '<div class="chat-item' + (c.id === currentId ? " active" : "") + '" data-chat="' + c.id + '" role="button" tabindex="0" aria-label="Open chat: ' + esc(c.title) + '"><span class="t">' + esc(c.title) + '</span>' +
+          '<span class="fold" data-fold="' + c.id + '" role="button" tabindex="0" aria-label="Move chat to a folder" title="Move to a folder">' + FOLDER_SVG + '</span>' +
+          '<span class="del" data-del="' + c.id + '" role="button" tabindex="0" aria-label="Delete chat" title="Delete chat">✕</span></div>';
+        if (openMoveFor === c.id) {
+          h += '<div class="folder-menu" role="menu" aria-label="Move chat to a folder">';
+          h += '<button type="button" data-move="' + c.id + ':">No folder' + (!c.folderId ? " ✓" : "") + "</button>";
+          folders.forEach(function (f) {
+            h += '<button type="button" data-move="' + c.id + ":" + f.id + '">' + esc(f.name) + (c.folderId === f.id ? " ✓" : "") + "</button>";
+          });
+          if (!folders.length) h += '<div class="side-empty">No folders yet — create one with “+ New folder” above.</div>';
+          h += "</div>";
+        }
+        return h;
+      }
       function renderChatList() {
         var q = ($("chatSearch").value || "").toLowerCase();
         var list = $("chatList");
@@ -966,24 +1096,77 @@
           list.innerHTML = '<div class="side-empty">' + (chats.length ? "No chats match your search." : "No chats yet in this session. Start one above — it stays only while this page is open.") + "</div>";
           return;
         }
-        var html = "<h3>Today</h3>";
-        visible.forEach(function (c) {
-          html += '<div class="chat-item' + (c.id === currentId ? " active" : "") + '" data-chat="' + c.id + '" role="button" tabindex="0" aria-label="Open chat: ' + esc(c.title) + '"><span class="t">' + esc(c.title) + '</span><span class="del" data-del="' + c.id + '" role="button" tabindex="0" aria-label="Delete chat" title="Delete chat">✕</span></div>';
+        var html = "";
+        folders.forEach(function (f) {
+          var inF = visible.filter(function (c) { return c.folderId === f.id; });
+          if (q && !inF.length) return;
+          html += '<div class="folder-head"><span>' + esc(f.name) + '</span><button type="button" class="folder-del" data-foldel="' + f.id + '" aria-label="Delete folder ' + esc(f.name) + '" title="Delete folder — its chats stay, unfiled">✕</button></div>';
+          if (!inF.length) html += '<div class="side-empty">Empty — open a chat and tap its folder icon to file it here.</div>';
+          inF.forEach(function (c) { html += chatItemHtml(c); });
         });
+        var loose = visible.filter(function (c) { return !folderById(c.folderId); });
+        if (loose.length) {
+          html += "<h3>Today</h3>";
+          loose.forEach(function (c) { html += chatItemHtml(c); });
+        }
         list.innerHTML = html;
         list.querySelectorAll("[data-del]").forEach(function (d) {
           function onDel(e) { e.stopPropagation(); deleteChat(d.getAttribute("data-del")); }
           d.addEventListener("click", onDel);
           d.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onDel(e); } });
         });
+        list.querySelectorAll("[data-fold]").forEach(function (d) {
+          function onFold(e) {
+            e.stopPropagation();
+            var id = d.getAttribute("data-fold");
+            openMoveFor = openMoveFor === id ? null : id;
+            renderChatList();
+          }
+          d.addEventListener("click", onFold);
+          d.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onFold(e); } });
+        });
+        list.querySelectorAll("[data-move]").forEach(function (b) {
+          b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var parts = this.getAttribute("data-move").split(":");
+            moveChatToFolder(parts[0], parts[1] || null);
+          });
+        });
+        list.querySelectorAll("[data-foldel]").forEach(function (b) {
+          b.addEventListener("click", function (e) { e.stopPropagation(); deleteFolder(this.getAttribute("data-foldel")); });
+        });
         list.querySelectorAll("[data-chat]").forEach(function (b) {
           function open() {
             currentId = b.getAttribute("data-chat");
+            openMoveFor = null;
             renderChatList(); renderThread(); closeSidebarMobile();
           }
           b.addEventListener("click", open);
           b.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); open(); } });
         });
+      }
+      function moveChatToFolder(chatId, folderId) {
+        for (var i = 0; i < chats.length; i++) if (chats[i].id === chatId) chats[i].folderId = folderId;
+        openMoveFor = null;
+        renderChatList();
+        var f = folderById(folderId);
+        toast(f ? "Filed under “" + f.name + "”" : "Removed from its folder");
+      }
+      function createFolder() {
+        var name = $("folderName").value.trim();
+        if (!name) { toast("আগে ফোল্ডারের নাম লেখো — give the folder a name first"); $("folderName").focus(); return; }
+        folders.push({ id: "f" + Date.now() + Math.floor(Math.random() * 999), name: name });
+        $("folderName").value = "";
+        $("folderForm").classList.remove("show");
+        renderChatList();
+        toast("Folder created: " + name);
+      }
+      function deleteFolder(id) {
+        var f = folderById(id);
+        folders = folders.filter(function (x) { return x.id !== id; });
+        chats.forEach(function (c) { if (c.folderId === id) c.folderId = null; });
+        renderChatList();
+        toast("Folder deleted" + (f ? ": " + f.name : "") + " — its chats are unfiled, not deleted");
       }
 
       function updateProviderHint() {
@@ -1096,9 +1279,15 @@
         });
       }
 
-      function buildMessages(chat, searchCtx) {
+      function buildMessages(chat, searchCtx, linkCtx) {
         var msgs = [];
         var sys = styleSystem($("styleSel").value);
+        if (tutorMode) {
+          sys = "You are a kind, patient Bengali tutor (বাংলা শিক্ষক) teaching a student in Bangladesh. ALWAYS teach in clear, simple Bangla (Bengali), even if the student writes in English. Explain lessons step by step with small everyday examples. For quizzes, ask ONE question at a time, wait for the student's answer, then say whether it is right or wrong and briefly why before asking the next question. For exam preparation, pick the most important and likely questions and give short model answers. " + sys;
+        }
+        if (linkCtx) {
+          sys += " The user pasted a web page link (" + linkCtx.url + ") and wants a summary of it. The text fetched from that page is below. Summarize it in the language the user wrote in (Bangla if they wrote Bangla): the main points first, then the key details as short bullets. Use ONLY what is in the page text — do not invent anything.\n\n--- PAGE ---\n" + linkCtx.text + "\n--- END PAGE ---";
+        }
         if (memoryOn && memoryFacts.length) {
           sys += " Long-term memory about this user (they chose to save it on their own device): " + memoryFacts.join(" · ") + ". Use it naturally — their name, place and preferences.";
         }
@@ -1174,11 +1363,19 @@
         chat.messages.push({ role: "user", content: text });
         if (chat.title === "New chat") chat.title = text.length > 36 ? text.slice(0, 36) + "…" : text;
         $("input").value = ""; autoGrow();
-        sending = true; $("sendBtn").disabled = true;
+        runSend(chat, text, false);
+      }
+
+      /* Runs a send for the chat's already-added last user message and appends the
+         reply. forceImage re-runs image generation (Regenerate on a picture). */
+      function runSend(chat, text, forceImage) {
+        var myGen = ++sendGen;
+        sending = true; setSendStopUI(true);
         renderChatList(); renderThread();
 
         function finishSend() {
-          sending = false; $("sendBtn").disabled = false;
+          if (myGen !== sendGen) return;
+          sending = false; setSendStopUI(false);
           renderChatList(); renderThread();
           $("input").focus();
           if (callActive) {
@@ -1189,15 +1386,17 @@
           }
         }
 
-        if (imageMode) {
+        if (imageMode || forceImage) {
           var seed = Math.floor(Math.random() * 999999);
           var imgUrl = "https://image.pollinations.ai/prompt/" + encodeURIComponent(text) + "?width=1024&height=1024&seed=" + seed + "&nologo=true";
           var probe = new Image();
           probe.onload = function () {
+            if (myGen !== sendGen) return;
             chat.messages.push({ role: "assistant", content: text, image: imgUrl, via: "image.pollinations.ai" });
             finishSend();
           };
           probe.onerror = function () {
+            if (myGen !== sendGen) return;
             chat.messages.push({ role: "assistant", error: true, content: "Image generation failed — the free image service did not return a picture. Wait a moment and try again; free-tier throttling is common." });
             finishSend();
           };
@@ -1213,8 +1412,8 @@
           if (nm) addFact("Name: " + nm[1].trim());
         }
 
-        var proceed = function (searchCtx) {
-        var messages = buildMessages(chat, searchCtx);
+        var proceed = function (searchCtx, linkCtx) {
+        var messages = buildMessages(chat, searchCtx, linkCtx);
 
         if (compareMode) {
           var pool = ["gateway", "llm7"].concat(KEYED.filter(function (id) { return !!keys[id]; }), ["ollama"]);
@@ -1224,6 +1423,7 @@
             return callProvider(id, messages).then(function (res) { return { via: res.via, content: res.content }; })
               .catch(function (err) { return { via: PROVIDERS[id].name, error: String(err && err.message ? err.message : err).slice(0, 160) }; });
           })).then(function (results) {
+            if (myGen !== sendGen) return;
             var msg = { role: "assistant", compare: results, chosen: -1, content: "", sources: searchCtx ? searchCtx.sources : null, related: searchCtx ? searchCtx.related : null };
             var first = results.filter(function (r) { return !r.error; })[0];
             if (first) { msg.content = first.content; msg.via = first.via; msg.defIdx = results.indexOf(first); }
@@ -1233,53 +1433,233 @@
           return;
         }
 
-        var pinned = $("providerSel").value;
-        var tried = [];
-        var chain;
-        if (pinned === "auto") {
-          chain = AUTO_ORDER.filter(function (id) {
-            if (KEYED.indexOf(id) >= 0 && !keys[id]) return false; // no key saved — skipped, not "tried"
-            return true;
-          });
-        } else {
-          chain = [pinned];
-        }
-
-        var i = 0;
-        function attempt() {
-          if (i >= chain.length) {
-            var detail;
-            if (pinned === "auto") {
-              detail = "No reply — none of the Auto-mode providers answered. Tried in order: " + tried.join(" · ") + "." +
-                (KEYED.some(function (k) { return !keys[k]; }) ? " Groq, OpenRouter, Gemini and Mistral are skipped until you add their free keys in Settings." : "");
-            } else {
-              detail = "No reply from " + PROVIDERS[pinned].name + ". " + (tried[0] || "");
-            }
-            chat.messages.push({ role: "assistant", error: true, content: detail });
+        runChain(messages, function (res, tried, pinned) {
+          if (res) {
+            chat.messages.push({ role: "assistant", content: res.content, via: res.via, sources: searchCtx ? searchCtx.sources : (linkCtx ? [{ title: "Page you shared", url: linkCtx.url }] : null), related: searchCtx ? searchCtx.related : null });
             finishSend();
             return;
           }
-          var id = chain[i++];
-          callProvider(id, messages).then(function (res) {
-            chat.messages.push({ role: "assistant", content: res.content, via: res.via, sources: searchCtx ? searchCtx.sources : null, related: searchCtx ? searchCtx.related : null });
-            finishSend();
-          }).catch(function (err) {
-            tried.push(PROVIDERS[id].name + " (" + String(err && err.message ? err.message : err).slice(0, 90) + ")");
-            attempt();
-          });
-        }
-        attempt();
+          var detail;
+          if (pinned === "auto") {
+            detail = "No reply — none of the Auto-mode providers answered. Tried in order: " + tried.join(" · ") + "." +
+              (KEYED.some(function (k) { return !keys[k]; }) ? " Groq, OpenRouter, Gemini and Mistral are skipped until you add their free keys in Settings." : "");
+          } else {
+            detail = "No reply from " + PROVIDERS[pinned].name + ". " + (tried[0] || "");
+          }
+          chat.messages.push({ role: "assistant", error: true, content: detail });
+          finishSend();
+        });
         };
+
+        var linkUrl = extractUrl(text);
+        if (linkUrl && linkSummaryWanted(text, linkUrl)) {
+          toast("লিংকটা পড়ছি — reading the page…");
+          fetchLinkText(linkUrl).then(function (pageText) {
+            if (myGen !== sendGen) return;
+            if (!pageText) {
+              var rest = text.replace(linkUrl, "").trim();
+              if (rest.length <= 60) {
+                chat.messages.push({ role: "assistant", error: true, content: "এই লিংকটা খুলে পড়া গেল না — that page could not be read. Some sites block outside readers or need a login. Try a different link, or paste the page's text here and ask for a summary." });
+                finishSend();
+                return;
+              }
+              toast("That link could not be read — answering without it");
+              proceed(null, null);
+              return;
+            }
+            proceed(null, { url: linkUrl, text: pageText });
+          });
+          return;
+        }
 
         if (webSearch) {
           toast("Searching the web…");
           fetchSearchContext(text).then(function (ctx) {
+            if (myGen !== sendGen) return;
             if (!ctx) toast("Web search found nothing fresh — answering as usual");
-            proceed(ctx);
-          }).catch(function () { proceed(null); });
+            proceed(ctx, null);
+          }).catch(function () { if (myGen === sendGen) proceed(null, null); });
         } else {
-          proceed(null);
+          proceed(null, null);
         }
+      }
+
+      /* ================= Provider chain (shared by chat sends and AI tools) ================= */
+      function runChain(messages, cb) {
+        var g = sendGen;
+        var pinned = $("providerSel").value;
+        var tried = [];
+        var chain = pinned === "auto"
+          ? AUTO_ORDER.filter(function (id) { return !(KEYED.indexOf(id) >= 0 && !keys[id]); }) // no key saved — skipped, not "tried"
+          : [pinned];
+        var i = 0;
+        (function attempt() {
+          if (g !== sendGen) return;
+          if (i >= chain.length) { cb(null, tried, pinned); return; }
+          var id = chain[i++];
+          callProvider(id, messages).then(function (res) {
+            if (g === sendGen) cb(res, tried, pinned);
+          }).catch(function (err) {
+            if (g !== sendGen) return;
+            tried.push(PROVIDERS[id].name + " (" + String(err && err.message ? err.message : err).slice(0, 90) + ")");
+            attempt();
+          });
+        })();
+      }
+
+      /* ================= Stop + Regenerate ================= */
+      var SEND_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+      var STOP_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
+      function setSendStopUI(on) {
+        var b = $("sendBtn");
+        b.innerHTML = on ? STOP_ICON : SEND_ICON;
+        b.setAttribute("aria-label", on ? "Stop generating" : "Send message");
+        b.title = on ? "Stop" : "Send";
+      }
+      function stopSend() {
+        if (!sending) return;
+        sendGen++;
+        stopAllFetches();
+        sending = false;
+        setSendStopUI(false);
+        if (callActive) endCall();
+        renderThread();
+        toast("Stopped — উত্তর থামানো হয়েছে");
+      }
+      function regenerate() {
+        if (sending) return;
+        var chat = currentChat();
+        if (!chat) return;
+        var ui = -1;
+        for (var i = chat.messages.length - 1; i >= 0; i--) { if (chat.messages[i].role === "user") { ui = i; break; } }
+        if (ui < 0) return;
+        var wasImage = false;
+        for (var j = ui + 1; j < chat.messages.length; j++) if (chat.messages[j].image) wasImage = true;
+        var text = chat.messages[ui].content;
+        chat.messages.length = ui + 1;
+        runSend(chat, text, wasImage);
+      }
+
+      /* ================= Link summary ================= */
+      function extractUrl(text) {
+        var m = String(text || "").match(/https?:\/\/[^\s<>"']+/);
+        return m ? m[0].replace(/[).,।!?]+$/, "") : null;
+      }
+      function linkSummaryWanted(text, url) {
+        var rest = text.replace(url, "").trim();
+        if (rest.length <= 60) return true;
+        return /summar|সারাংশ|সংক্ষেপ|summary/i.test(text);
+      }
+      function fetchLinkText(url) {
+        // Reader proxy first (returns clean page text, no key); direct fetch as fallback.
+        return fetchTimeout("https://r.jina.ai/" + url, {}, 25000)
+          .then(function (r) { if (!r.ok) throw new Error("reader HTTP " + r.status); return r.text(); })
+          .then(function (t) {
+            t = String(t || "").trim();
+            if (t.length < 200) throw new Error("too little text");
+            return t.slice(0, 12000);
+          })
+          .catch(function () {
+            return fetchTimeout(url, {}, 15000)
+              .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+              .then(function (h) {
+                var t = String(h || "")
+                  .replace(/<script[\s\S]*?<\/script>/gi, " ")
+                  .replace(/<style[\s\S]*?<\/style>/gi, " ")
+                  .replace(/<[^>]+>/g, " ")
+                  .replace(/\s+/g, " ").trim();
+                if (t.length < 200) throw new Error("too little text");
+                return t.slice(0, 12000);
+              });
+          })
+          .catch(function () { return null; });
+      }
+
+      /* ================= AI tools bar (one click, on the text in the box) ================= */
+      var TOOLS = {
+        bn:   { label: "অনুবাদ → বাংলা", sys: "You are a translator. Translate the user's text into natural Bangla (Bengali). Reply with ONLY the translation — no notes, no quotation marks, no explanation." },
+        en:   { label: "Translate → English", sys: "You are a translator. Translate the user's text into clear, natural English. Reply with ONLY the translation — no notes, no quotation marks, no explanation." },
+        para: { label: "Paraphrase", sys: "Paraphrase (rewrite) the user's text in the SAME language it is written in, keeping the meaning exactly but using different words and sentence structure. Reply with ONLY the rewritten text." },
+        fix:  { label: "বানান ও ব্যাকরণ ঠিক", sys: "Correct the spelling and grammar (বানান ও ব্যাকরণ) of the user's text, keeping its language, meaning and tone. Reply with ONLY the corrected text — no explanations, no list of changes." }
+      };
+      function runTool(kind) {
+        if (sending) { toast("Wait for the current reply — or tap Stop first"); return; }
+        var tool = TOOLS[kind];
+        if (!tool) return;
+        var text = $("input").value.trim();
+        if (!text) { toast("আগে বক্সে লেখাটা লেখো বা paste করো — type or paste the text first, then tap a tool"); $("input").focus(); return; }
+        var chat = ensureChat();
+        chat.messages.push({ role: "user", content: text });
+        if (chat.title === "New chat") chat.title = text.length > 36 ? text.slice(0, 36) + "…" : text;
+        $("input").value = ""; autoGrow();
+        var myGen = ++sendGen;
+        sending = true; setSendStopUI(true);
+        renderChatList(); renderThread();
+        var messages = [{ role: "system", content: tool.sys }, { role: "user", content: text }];
+        runChain(messages, function (res, tried) {
+          if (myGen !== sendGen) return;
+          sending = false; setSendStopUI(false);
+          if (res) {
+            chat.messages.push({ role: "assistant", content: res.content, via: tool.label + " · " + res.via });
+          } else {
+            chat.messages.push({ role: "assistant", error: true, content: "That tool could not run — no provider answered. Tried: " + tried.join(" · ") });
+          }
+          renderChatList(); renderThread();
+        });
+      }
+
+      /* ================= Bengali tutor (বাংলা শিক্ষক) ================= */
+      function setTutorMode(on) {
+        tutorMode = on;
+        $("tutorBtn").classList.toggle("on", on);
+        $("tutorBtn").setAttribute("aria-pressed", on ? "true" : "false");
+        $("tutorBar").classList.toggle("show", on);
+        if (on) toast("বাংলা শিক্ষক চালু — পড়া বাংলায় বুঝিয়ে দেওয়া হবে। বিষয় লিখে বুঝিয়ে দাও / কুইজ নাও / পরীক্ষার প্রস্তুতি চাপো");
+      }
+      function tutorAction(kind) {
+        var templates = {
+          explain: "এই বিষয়টা সহজ বাংলায় ধাপে ধাপে বুঝিয়ে দাও, ছোট ছোট উদাহরণ দিয়ে: ",
+          quiz: "আমাকে কুইজ নাও — মোট ৫টা প্রশ্ন করবে, একটা করে; আমি উত্তর দিলে ঠিক/ভুল জানিয়ে পরের প্রশ্নে যাবে। বিষয়: ",
+          exam: "পরীক্ষার প্রস্তুতির জন্য এই বিষয়ের সবচেয়ে গুরুত্বপূর্ণ ১০টা প্রশ্ন আর ছোট মডেল উত্তর বানিয়ে দাও। বিষয়: "
+        };
+        var topic = $("input").value.trim();
+        if (!topic) {
+          $("input").value = templates[kind];
+          autoGrow(); $("input").focus();
+          toast("শেষে বিষয়টা লিখে Send চাপো — add the topic, then send");
+          return;
+        }
+        if (sending) return;
+        $("input").value = templates[kind] + topic;
+        sendCurrent();
+      }
+
+      /* ================= Image gallery ================= */
+      function renderGallery() {
+        var items = [];
+        chats.forEach(function (c) {
+          c.messages.forEach(function (m) { if (m.image) items.push({ src: m.image, prompt: m.content, chat: c.title }); });
+        });
+        var g = $("galleryGrid");
+        if (!items.length) {
+          g.innerHTML = '<p class="lede">No pictures yet. In chat, tap the image button, describe a scene and send — the picture will appear here.</p>';
+          return;
+        }
+        g.innerHTML = items.map(function (it, i) {
+          return '<figure class="gal-card"><img src="' + esc(it.src) + '" alt="' + esc(it.prompt) + '" loading="lazy"><figcaption>' + esc(it.prompt) + "<span>From chat: " + esc(it.chat) + '</span></figcaption><div class="gal-btns"><a class="dl-btn" href="' + esc(it.src) + '" target="_blank" rel="noopener">Open full size</a><button type="button" class="dl-btn" data-gal-dl="' + i + '">Download</button></div></figure>';
+        }).join("");
+        g.querySelectorAll("[data-gal-dl]").forEach(function (b) {
+          b.addEventListener("click", function () { downloadImage(items[Number(this.getAttribute("data-gal-dl"))]); });
+        });
+      }
+      function downloadImage(it) {
+        if (!it) return;
+        fetch(it.src).then(function (r) { return r.blob(); }).then(function (blob) {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob); a.download = "ai-image.jpg";
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+        }).catch(function () { window.open(it.src, "_blank"); });
       }
 
       /* ================= Voice ================= */
@@ -1640,11 +2020,14 @@
         $("tabPrompts").setAttribute("aria-selected", v === "prompts" ? "true" : "false");
         $("tabExt").setAttribute("aria-selected", v === "ext" ? "true" : "false");
         $("tabCode").setAttribute("aria-selected", v === "code" ? "true" : "false");
+        $("tabGallery").setAttribute("aria-selected", v === "gallery" ? "true" : "false");
         $("reposView").classList.toggle("show", v === "repos");
         $("promptsView").classList.toggle("show", v === "prompts");
         $("extView").classList.toggle("show", v === "ext");
         $("codeView").classList.toggle("show", v === "code");
+        $("galleryView").classList.toggle("show", v === "gallery");
         if (v === "code") initStudio();
+        if (v === "gallery") renderGallery();
         var inChat = v === "chat";
         $("thread").style.display = inChat ? "" : "none";
         $("composerWrap").style.display = inChat ? "" : "none";
@@ -1691,6 +2074,7 @@
         $("tabPrompts").addEventListener("click", function () { setView("prompts"); });
         $("tabCode").addEventListener("click", function () { setView("code"); });
         $("tabExt").addEventListener("click", function () { setView("ext"); });
+        $("tabGallery").addEventListener("click", function () { setView("gallery"); });
         $("searchBtn").addEventListener("click", function () {
           webSearch = !webSearch;
           this.classList.toggle("on", webSearch);
@@ -1738,6 +2122,23 @@
         $("attachBtn").addEventListener("click", function () { $("fileInput").click(); });
         $("fileInput").addEventListener("change", function () { handleFile(this.files && this.files[0]); });
         $("docRemove").addEventListener("click", clearDoc);
+        $("tutorBtn").addEventListener("click", function () { setTutorMode(!tutorMode); if (tutorMode) $("input").focus(); });
+        document.querySelectorAll("[data-tutor]").forEach(function (b) {
+          b.addEventListener("click", function () { tutorAction(this.getAttribute("data-tutor")); });
+        });
+        document.querySelectorAll("[data-tool]").forEach(function (b) {
+          b.addEventListener("click", function () { runTool(this.getAttribute("data-tool")); });
+        });
+        $("sendBtn").addEventListener("click", function (e) { if (sending) { e.preventDefault(); stopSend(); } });
+        $("folderAddBtn").addEventListener("click", function () {
+          $("folderForm").classList.toggle("show");
+          if ($("folderForm").classList.contains("show")) $("folderName").focus();
+        });
+        $("folderCreate").addEventListener("click", createFolder);
+        $("folderName").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); createFolder(); } });
+        document.addEventListener("click", function (e) {
+          if (openMoveFor && e.target.closest && !e.target.closest(".folder-menu") && !e.target.closest("[data-fold]")) { openMoveFor = null; renderChatList(); }
+        });
         document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeSettings(); closeSidebarMobile(); } });
         updateProviderHint();
       });
