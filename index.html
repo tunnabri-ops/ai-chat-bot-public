@@ -433,6 +433,17 @@
       .brief-news a:hover { text-decoration: underline; }
       .bn-src { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; }
       .brief-fail { color: var(--err); margin: 0; font-size: 14px; }
+      .bw-fc { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 7px; }
+      .bw-fc-row { display: flex; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink-2); padding: 2px 0; }
+      .bw-fc-row .bw-fc-date { font-weight: 700; color: var(--ink); min-width: 92px; }
+      /* Briefing progress line — shown only while a briefing fetch is running;
+         startBriefing clears it on success AND on failure (and Stop clears it). */
+      .brief-status {
+        display: none; max-width: 760px; margin: 0 auto 8px;
+        background: var(--accent-soft); color: var(--accent-ink);
+        border-radius: 10px; padding: 8px 13px; font-size: 13.5px; font-weight: 600;
+      }
+      .brief-status.show { display: block; }
 
       /* Personas */
       .prompt-card.active-persona { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -717,6 +728,7 @@
 
         <!-- Composer -->
         <div class="composer-wrap" id="composerWrap">
+          <div class="brief-status" id="briefStatus" role="status">ব্রিফিং তৈরি হচ্ছে — লাইভ আবহাওয়া আর তাজা খবর আনা হচ্ছে…</div>
           <div class="tools-bar" id="toolsBar" role="group" aria-label="AI tools — one click">
             <span class="tools-label">AI tools</span>
             <button type="button" data-tool="bn">অনুবাদ → বাংলা</button>
@@ -1118,7 +1130,11 @@
               '</div><div class="actions">' +
               '<button type="button" data-copy="' + idx + '">Copy</button>' +
               (m.image ? "" : '<button type="button" data-listen="' + idx + '">Listen</button>') +
-              (idx === lastAi && !sending ? '<button type="button" data-regen="' + idx + '">Regenerate</button>' : "") +
+              (idx === lastAi && !sending
+                ? (m.briefing
+                    ? '<button type="button" data-briefregen="' + idx + '">আবার ব্রিফিং নাও · Refresh briefing</button>'
+                    : '<button type="button" data-regen="' + idx + '">Regenerate</button>')
+                : "") +
               "</div></div>";
           }
         });
@@ -1153,6 +1169,12 @@
           });
         });
         th.querySelectorAll("[data-regen]").forEach(function (b) {
+          b.addEventListener("click", function () { regenerate(); });
+        });
+        th.querySelectorAll("[data-briefregen]").forEach(function (b) {
+          // Briefing replies never get a plain model regenerate — this button
+          // re-runs the full live briefing fetch (regenerate() routes
+          // briefing chats to startBriefing with fresh weather + headlines).
           b.addEventListener("click", function () { regenerate(); });
         });
         scrollDown();
@@ -1615,9 +1637,17 @@
         stopAllFetches();
         sending = false;
         setSendStopUI(false);
+        setBriefStatus(false);
         if (callActive) endCall();
         renderThread();
         toast("Stopped — উত্তর থামানো হয়েছে");
+      }
+      /* The briefing progress line lives above the composer. It is shown when
+         a briefing starts and MUST be hidden on every exit path — success,
+         failure and Stop — so it can never linger under a finished reply. */
+      function setBriefStatus(on) {
+        var el = $("briefStatus");
+        if (el) el.classList.toggle("show", !!on);
       }
       function regenerate() {
         if (sending) return;
@@ -1626,17 +1656,24 @@
         var ui = -1;
         for (var i = chat.messages.length - 1; i >= 0; i--) { if (chat.messages[i].role === "user") { ui = i; break; } }
         if (ui < 0) return;
-        var wasImage = false;
-        for (var j = ui + 1; j < chat.messages.length; j++) if (chat.messages[j].image) wasImage = true;
+        var wasImage = false, wasBriefing = false;
+        for (var j = ui + 1; j < chat.messages.length; j++) {
+          if (chat.messages[j].image) wasImage = true;
+          if (chat.messages[j].briefing) wasBriefing = true;
+        }
         var text = chat.messages[ui].content;
         var bCity = chat.messages[ui].briefingCity, bLabel = chat.messages[ui].briefingCityLabel;
-        chat.messages.length = ui + 1;
-        if (bCity) {
-          // A briefing is live data, not model prose — Regenerate re-fetches it fresh.
+        // A briefing is live data, not model prose. If the reply being
+        // regenerated IS a structured briefing (its assistant message carries
+        // .briefing) or its user message was a briefing request, Regenerate
+        // NEVER calls the model — it re-runs the full briefing fetch with
+        // fresh weather + fresh headlines and renders a new structured reply.
+        if (bCity || wasBriefing) {
           chat.messages.length = ui;
-          startBriefing(bCity, bLabel || bCity);
+          startBriefing(bCity || "Dhaka", bLabel || bCity || "ঢাকা (Dhaka)");
           return;
         }
+        chat.messages.length = ui + 1;
         runSend(chat, text, wasImage);
       }
 
@@ -1837,9 +1874,9 @@
       }
 
       /* ================= Morning briefing (সকালের ব্রিফিং) =================
-         Live data FIRST, model second. Weather and headlines are fetched as
-         structured data from the same free endpoints web search uses
-         (Open-Meteo + DuckDuckGo) and rendered into the reply by code,
+         Live data FIRST, model second. Weather comes from Open-Meteo and
+         headlines from a fallback chain of CORS-reachable news sources
+         (see fetchBriefingNews), both rendered into the reply by code,
          verbatim — the provider is only asked for a short neutral Bangla
          intro and is told never to state facts itself. The briefing is built
          WITHOUT buildMessages, so no active persona, tutor style, memory or
@@ -1870,29 +1907,54 @@
 
       /* Structured weather — same Open-Meteo endpoints fetchSearchContext
          uses, but returns the raw values instead of prose context.
-         Resolves to null on any failure so the UI can say so honestly. */
+         DETERMINISTIC shape: every field the block renders is always present
+         in the result — a number, or null when the API genuinely did not
+         send it (the renderer then shows "জানা যায়নি", never a guess).
+         Resolves to null only when no weather could be fetched at all. */
       function fetchBriefingWeather(city) {
+        function num(v) { return (v == null || v === "" || isNaN(Number(v))) ? null : Number(v); }
         return fetchTimeout("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&format=json", {}, 12000)
           .then(function (r) { return r.json(); })
           .then(function (g) {
             var loc = g.results && g.results[0];
             if (!loc) throw new Error("place not found");
-            return fetchTimeout("https://api.open-meteo.com/v1/forecast?latitude=" + loc.latitude + "&longitude=" + loc.longitude + "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=auto", {}, 12000)
+            return fetchTimeout("https://api.open-meteo.com/v1/forecast?latitude=" + loc.latitude + "&longitude=" + loc.longitude + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&forecast_days=3&timezone=auto", {}, 12000)
               .then(function (r) { return r.json(); })
               .then(function (w) {
                 if (!w.current || !w.daily || !w.daily.time || !w.daily.time.length) throw new Error("no weather data");
+                var d = w.daily;
+                function dayArr(key) { return d[key] || []; }
+                var forecast = [];
+                for (var i = 0; i < 3; i++) {
+                  if (d.time[i] == null) break;
+                  forecast.push({
+                    date: d.time[i],
+                    tempMax: num(dayArr("temperature_2m_max")[i]),
+                    tempMin: num(dayArr("temperature_2m_min")[i]),
+                    rainChance: num(dayArr("precipitation_probability_max")[i]),
+                    code: dayArr("weather_code")[i] == null ? null : dayArr("weather_code")[i]
+                  });
+                }
                 return {
                   place: loc.name + (loc.country ? ", " + loc.country : ""),
-                  date: w.daily.time[0],
-                  tempNow: w.current.temperature_2m,
-                  tempMax: w.daily.temperature_2m_max[0],
-                  tempMin: w.daily.temperature_2m_min[0],
-                  rainChance: w.daily.precipitation_probability_max ? w.daily.precipitation_probability_max[0] : null,
-                  code: w.current.weather_code
+                  date: d.time[0],
+                  tempNow: num(w.current.temperature_2m),
+                  humidity: num(w.current.relative_humidity_2m),
+                  wind: num(w.current.wind_speed_10m),
+                  code: w.current.weather_code == null ? null : w.current.weather_code,
+                  tempMax: num(dayArr("temperature_2m_max")[0]),
+                  tempMin: num(dayArr("temperature_2m_min")[0]),
+                  rainChance: num(dayArr("precipitation_probability_max")[0]),
+                  forecast: forecast
                 };
               });
           })
           .catch(function () { return null; });
+      }
+      /* One weather value, rendered the same way every time: the number and
+         its unit, or "জানা যায়নি" when the API did not provide it. */
+      function bwVal(v, unit) {
+        return (v == null || v === "" || (typeof v === "number" && isNaN(v))) ? "জানা যায়নি" : String(v) + (unit || "");
       }
 
       function hostLabel(url) {
@@ -1907,37 +1969,155 @@
         return t;
       }
 
-      /* Structured headlines from DuckDuckGo — the same instant-answer
-         endpoint web search uses. News phrasings can come back empty there,
-         so a few are tried in order and the real results accumulated.
-         Resolves to an array (possibly empty) of {title, source, url};
-         every entry is a fetched result — nothing is ever made up here. */
-      function fetchBriefingNews() {
-        var queries = ["latest news headlines today", "Bangladesh news headlines today", "top world news headlines"];
-        var found = [], seen = {};
-        function add(item) {
-          if (!item.url || seen[item.url] || found.length >= 5) return;
-          seen[item.url] = 1; found.push(item);
+      /* ---- Headline parsers (pure functions of fetched payloads) ----
+         Each returns [{title, source, url}] built ONLY from the payload —
+         a headline is kept verbatim, its source is the payload's own source
+         name, and its link is the payload's own URL. Nothing is rewritten
+         or invented; unusable entries are dropped, not repaired. */
+      function gnSplitTitle(raw) {
+        // Google News titles arrive as "Headline text - BBC": split the
+        // source name off the end when the tail looks like a source.
+        var t = String(raw || "").replace(/\s+/g, " ").trim();
+        var cut = t.lastIndexOf(" - ");
+        if (cut > 25 && t.length - cut <= 42) return { title: t.slice(0, cut).trim(), source: t.slice(cut + 3).trim() };
+        return { title: t, source: "" };
+      }
+      function parseGnItems(items) {
+        var out = [];
+        (items || []).forEach(function (it) {
+          if (!it || !it.title || !it.link) return;
+          var sp = gnSplitTitle(it.title);
+          if (sp.title.length < 12) return;
+          out.push({ title: sp.title, source: String(it.author || "").trim() || sp.source || "Google News", url: it.link });
+        });
+        return out;
+      }
+      function parseGdeltArticles(articles) {
+        var out = [];
+        (articles || []).forEach(function (a) {
+          if (!a || !a.title || !a.url) return;
+          var t = String(a.title).replace(/\s+/g, " ").trim();
+          if (t.length < 12) return;
+          out.push({ title: t, source: a.domain || hostLabel(a.url), url: a.url });
+        });
+        return out;
+      }
+      function parseBbcMarkdown(md) {
+        // r.jina.ai returns the BBC News front page as markdown; article
+        // links look like [Headline text](https://www.bbc.com/news/articles/…)
+        var out = [], re = /\[([^\]\n]{15,160})\]\((https:\/\/(?:www\.)?bbc\.com\/news\/[^)\s]+)\)/g, m;
+        while ((m = re.exec(String(md || ""))) && out.length < 8) {
+          var t = m[1].replace(/\s+/g, " ").trim();
+          if (/^(BBC|News|Sport|Weather|Home|Menu|Sign in)/i.test(t)) continue;
+          out.push({ title: t, source: "BBC News", url: m[2] });
         }
-        function one(q) {
+        return out;
+      }
+      function parseExtractedLines(text) {
+        // Validates lines the gateway extracted from fetched page text:
+        // "Title | Source | https://…" — anything else is discarded, so the
+        // model can only ever hand back headlines that carry a real URL.
+        var out = [];
+        String(text || "").split(/\n/).forEach(function (ln) {
+          var parts = ln.split("|").map(function (s) { return s.trim(); });
+          if (parts.length !== 3) return;
+          if (parts[0].length < 12 || !/^https?:\/\/\S+$/.test(parts[2])) return;
+          out.push({ title: parts[0], source: parts[1] || hostLabel(parts[2]), url: parts[2] });
+        });
+        return out;
+      }
+
+      /* Structured headlines — a FALLBACK CHAIN, tried in order until one
+         step returns real items (later steps only top up a short list).
+         Why not just DuckDuckGo (the old code)? Verified by live fetches at
+         build time: api.duckduckgo.com answers with CORS * and valid JSON,
+         but for news queries the payload is an EMPTY stub (AbstractText "",
+         RelatedTopics []) — the Instant Answer API is not a news search, so
+         the old code collected zero headlines every time. The HTML/Lite
+         endpoints are worse from a browser page: no CORS header at all, and
+         they return a bot-challenge page with no results. Google News RSS
+         has real headlines but no CORS header either, so it is read through
+         rss2json (which reflects the page Origin) — and GDELT's own API
+         sends Access-Control-Allow-Origin: *. Steps:
+           1. rss2json ← Google News RSS (Bangladesh edition top stories)
+           2. rss2json ← Google News RSS search "Bangladesh" (top-up)
+           3. GDELT Doc API (real articles; rate-limited to 1 req / 5 s, so
+              a plain-text throttle reply is treated as a clean miss)
+           4. DuckDuckGo Instant Answer API (the original source — kept
+              because entity queries occasionally return RelatedTopics)
+           5. r.jina.ai reader on the BBC News front page (markdown links)
+           6. Free gateway, LAST RESORT and extraction-only: it may only
+              pull headlines out of text step 5 actually fetched — it is
+              never asked to recall or write news itself.
+         Resolves to an array (possibly empty) of {title, source, url};
+         every entry came from a fetched payload — nothing is made up. */
+      function fetchBriefingNews() {
+        var found = [], seen = {};
+        function addList(list) {
+          (list || []).forEach(function (item) {
+            if (!item.url || seen[item.url] || found.length >= 5) return;
+            seen[item.url] = 1; found.push(item);
+          });
+        }
+        function rss2json(feedUrl) {
+          return fetchTimeout("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(feedUrl) + "&count=8", {}, 15000)
+            .then(function (r) { if (!r.ok) throw new Error("rss2json HTTP " + r.status); return r.json(); })
+            .then(function (j) {
+              if (!j || j.status !== "ok") throw new Error("rss2json not ok");
+              return parseGnItems(j.items);
+            });
+        }
+        function ddg(q) {
           return fetchTimeout("https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1", {}, 12000)
             .then(function (r) { return r.json(); })
             .then(function (j) {
+              var out = [];
               if (j.AbstractText && j.AbstractURL) {
-                add({ title: headlineTitle(j.Heading ? j.Heading + " — " + j.AbstractText : j.AbstractText), source: j.AbstractSource || hostLabel(j.AbstractURL), url: j.AbstractURL });
+                out.push({ title: headlineTitle(j.Heading ? j.Heading + " — " + j.AbstractText : j.AbstractText), source: j.AbstractSource || hostLabel(j.AbstractURL), url: j.AbstractURL });
               }
               (j.RelatedTopics || []).forEach(function (t) {
                 var list = t.Topics ? t.Topics : [t];
                 list.forEach(function (x) {
-                  if (x.Text && x.FirstURL) add({ title: headlineTitle(x.Text), source: hostLabel(x.FirstURL), url: x.FirstURL });
+                  if (x.Text && x.FirstURL) out.push({ title: headlineTitle(x.Text), source: hostLabel(x.FirstURL), url: x.FirstURL });
                 });
               });
-            })
-            .catch(function () {});
+              return out;
+            });
         }
+        var bbcText = "";
+        var steps = [
+          function () { return rss2json("https://news.google.com/rss?hl=en-US&gl=BD&ceid=BD:en"); },
+          function () { return rss2json("https://news.google.com/rss/search?q=Bangladesh&hl=en-US&gl=BD&ceid=BD:en"); },
+          function () {
+            return fetchTimeout("https://api.gdeltproject.org/api/v2/doc/doc?query=bangladesh&mode=ArtList&maxrecords=10&format=json&sort=datedesc", {}, 15000)
+              .then(function (r) { if (!r.ok) throw new Error("gdelt HTTP " + r.status); return r.json(); })
+              .then(function (j) { return parseGdeltArticles(j && j.articles); });
+          },
+          function () { return ddg("Bangladesh news"); },
+          function () {
+            return fetchTimeout("https://r.jina.ai/https://www.bbc.com/news", {}, 20000)
+              .then(function (r) { if (!r.ok) throw new Error("reader HTTP " + r.status); return r.text(); })
+              .then(function (t) { bbcText = String(t || ""); return parseBbcMarkdown(bbcText); });
+          },
+          function () {
+            // Extraction only, over text that was really fetched above.
+            if (!bbcText || bbcText.length < 500) return [];
+            var msgs = [
+              { role: "system", content: "You extract headlines from fetched web page text. Reply with up to 5 lines, each exactly: Headline title | Source name | Full URL — copied VERBATIM from the text (the URL must appear in the text). Do not write, recall or invent any headline, source or URL. If the text contains no headlines with URLs, reply with exactly: NONE" },
+              { role: "user", content: bbcText.slice(0, 9000) }
+            ];
+            return callGateway(msgs).then(function (g) { return parseExtractedLines(g.content); });
+          }
+        ];
         var chain = Promise.resolve();
-        queries.forEach(function (q) {
-          chain = chain.then(function () { if (found.length < 3) return one(q); });
+        steps.forEach(function (step) {
+          chain = chain.then(function () {
+            if (found.length >= 3) return;
+            // Promise.resolve().then(step) so a step may return a plain
+            // array (the extraction step does, when it has no fetched text)
+            // as well as a promise, and a throwing step just misses.
+            return Promise.resolve().then(step).then(addList).catch(function () {});
+          });
         });
         return chain.then(function () { return found; });
       }
@@ -1960,11 +2140,28 @@
         if (b.intro) h += '<div class="brief-intro">' + formatBody(b.intro) + "</div>";
         h += '<div class="brief-block"><div class="brief-head">আবহাওয়া · Weather</div>';
         if (b.weather) {
+          // DETERMINISTIC block: the same fields, in the same order, on
+          // every run — city, date, current temperature, Bangla condition
+          // from the WMO code, high/low, rain chance, wind, humidity, then
+          // the 3-day forecast. A field the API did not send renders as
+          // "জানা যায়নি" via bwVal — never a made-up value.
           var w = b.weather;
           h += '<div class="bw-place">' + esc(w.place) + ' <span class="bw-date">· ' + esc(w.date) + "</span></div>" +
-            '<div class="bw-main"><span class="bw-temp">' + esc(w.tempNow) + '°C</span><span class="bw-cond">' + esc(weatherConditionBn(w.code)) + "</span></div>" +
-            '<div class="bw-sub">আজ সর্বোচ্চ ' + esc(w.tempMax) + "°C · সর্বনিম্ন " + esc(w.tempMin) + "°C · বৃষ্টির সম্ভাবনা " +
-            (w.rainChance == null ? "জানা যায়নি" : esc(w.rainChance) + "%") + "</div>";
+            '<div class="bw-main"><span class="bw-temp">' + esc(bwVal(w.tempNow, "°C")) + '</span><span class="bw-cond">' + esc(w.code == null ? "জানা যায়নি" : weatherConditionBn(w.code)) + "</span></div>" +
+            '<div class="bw-sub">আজ সর্বোচ্চ ' + esc(bwVal(w.tempMax, "°C")) + " · সর্বনিম্ন " + esc(bwVal(w.tempMin, "°C")) + " · বৃষ্টির সম্ভাবনা " + esc(bwVal(w.rainChance, "%")) + "</div>" +
+            '<div class="bw-sub">বাতাস ' + esc(bwVal(w.wind, " km/h")) + " · আর্দ্রতা " + esc(bwVal(w.humidity, "%")) + "</div>";
+          if (w.forecast && w.forecast.length) {
+            h += '<div class="bw-fc">';
+            w.forecast.forEach(function (f) {
+              h += '<div class="bw-fc-row"><span class="bw-fc-date">' + esc(f.date) + '</span><span>' +
+                esc(bwVal(f.tempMax, "°C")) + " / " + esc(bwVal(f.tempMin, "°C")) +
+                " · বৃষ্টি " + esc(bwVal(f.rainChance, "%")) +
+                " · " + esc(f.code == null ? "জানা যায়নি" : weatherConditionBn(f.code)) + "</span></div>";
+            });
+            h += "</div>";
+          } else {
+            h += '<div class="bw-sub">৩ দিনের পূর্বাভাস: জানা যায়নি</div>';
+          }
         } else {
           h += '<p class="brief-fail">আবহাওয়া আনা যায়নি — লাইভ আবহাওয়া সার্ভিস থেকে এই মুহূর্তে তথ্য পাওয়া যায়নি।</p>';
         }
@@ -1977,7 +2174,7 @@
           });
           h += "</ol>";
         } else {
-          h += '<p class="brief-fail">খবর আনা যায়নি — এই মুহূর্তে তাজা খবর পাওয়া যায়নি।</p>';
+          h += '<p class="brief-fail">খবর আনা যায়নি</p>';
         }
         h += "</div>";
         var srcs = briefingSources(b);
@@ -1994,9 +2191,18 @@
         var lines = [];
         if (b.intro) lines.push(b.intro, "");
         if (b.weather) {
+          // Same deterministic field set as briefingHtml, in plain text.
           var w = b.weather;
           lines.push("আবহাওয়া — " + w.place + " · " + w.date);
-          lines.push("এখন " + w.tempNow + "°C, " + weatherConditionBn(w.code) + "। আজ সর্বোচ্চ " + w.tempMax + "°C · সর্বনিম্ন " + w.tempMin + "°C · বৃষ্টির সম্ভাবনা " + (w.rainChance == null ? "জানা যায়নি" : w.rainChance + "%"));
+          lines.push("এখন " + bwVal(w.tempNow, "°C") + ", " + (w.code == null ? "জানা যায়নি" : weatherConditionBn(w.code)) + "। আজ সর্বোচ্চ " + bwVal(w.tempMax, "°C") + " · সর্বনিম্ন " + bwVal(w.tempMin, "°C") + " · বৃষ্টির সম্ভাবনা " + bwVal(w.rainChance, "%"));
+          lines.push("বাতাস " + bwVal(w.wind, " km/h") + " · আর্দ্রতা " + bwVal(w.humidity, "%"));
+          if (w.forecast && w.forecast.length) {
+            w.forecast.forEach(function (f) {
+              lines.push(f.date + ": " + bwVal(f.tempMax, "°C") + " / " + bwVal(f.tempMin, "°C") + " · বৃষ্টি " + bwVal(f.rainChance, "%") + " · " + (f.code == null ? "জানা যায়নি" : weatherConditionBn(f.code)));
+            });
+          } else {
+            lines.push("৩ দিনের পূর্বাভাস: জানা যায়নি");
+          }
         } else {
           lines.push("আবহাওয়া আনা যায়নি");
         }
@@ -2041,14 +2247,17 @@
         var myGen = ++sendGen;
         sending = true; setSendStopUI(true);
         renderChatList(); renderThread();
-        toast("ব্রিফিং তৈরি হচ্ছে — লাইভ আবহাওয়া আর তাজা খবর আনা হচ্ছে…");
+        // Dedicated progress line (not a self-dismissing toast): it stays
+        // while the briefing runs and is cleared explicitly on EVERY exit
+        // path below — deliver(), fail(), the no-data branch — plus Stop.
+        setBriefStatus(true);
         // 1) Fetch the live data FIRST and wait for both (each fetch carries
         //    its own timeout via fetchTimeout). No data — no invented briefing.
         Promise.all([fetchBriefingWeather(city), fetchBriefingNews()]).then(function (rs) {
           if (myGen !== sendGen) return;
           var weather = rs[0], headlines = rs[1] || [];
           if (!weather && !headlines.length) {
-            sending = false; setSendStopUI(false);
+            sending = false; setSendStopUI(false); setBriefStatus(false);
             chat.messages.push({ role: "assistant", error: true, content: "ব্রিফিং আনা গেল না — আবহাওয়া আনা যায়নি, খবরও আনা যায়নি। লাইভ সার্ভিসগুলো এই মুহূর্তে সাড়া দিচ্ছে না; ইন্টারনেট সংযোগ দেখে একটু পরে আবার চেষ্টা করো। কোনো আবহাওয়া বা খবর বানিয়ে দেওয়া হয়নি।" });
             renderChatList(); renderThread();
             $("input").focus();
@@ -2066,7 +2275,7 @@
           var messages = [{ role: "system", content: sys }, { role: "user", content: "সকালের ব্রিফিংয়ের শুরুর দু-এক লাইন লেখো।" }];
           var deliver = function (intro, via) {
             if (myGen !== sendGen) return;
-            sending = false; setSendStopUI(false);
+            sending = false; setSendStopUI(false); setBriefStatus(false);
             var b = { weather: weather, headlines: headlines, intro: intro || "" };
             chat.messages.push({ role: "assistant", content: briefingPlainText(b), briefing: b, via: via });
             renderChatList(); renderThread();
@@ -2074,7 +2283,7 @@
           };
           var fail = function (tried, pinned) {
             if (myGen !== sendGen) return;
-            sending = false; setSendStopUI(false);
+            sending = false; setSendStopUI(false); setBriefStatus(false);
             var detail;
             if (pinned === "auto") {
               detail = "ব্রিফিং তৈরি করা গেল না — কোনো provider উত্তর দেয়নি। চেষ্টা করা হয়েছে: " + tried.join(" · ") + "।" +
