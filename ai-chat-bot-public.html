@@ -415,6 +415,24 @@
       .gal-btns { display: flex; gap: 6px; padding: 6px 11px 11px; flex-wrap: wrap; }
       .gal-btns .dl-btn { margin-top: 0; text-decoration: none; display: inline-flex; align-items: center; }
 
+      /* Personas */
+      .prompt-card.active-persona { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+      .persona-form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px 16px; max-width: 640px; }
+      .persona-form label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin: 10px 0 3px; }
+      .persona-form label:first-child { margin-top: 0; }
+      .persona-form input, .persona-form textarea, .persona-form select { width: 100%; background: var(--bg); border: 1px solid var(--line-2); border-radius: 9px; padding: 8px 10px; font-size: 14px; }
+      .persona-form textarea { min-height: 4.2rem; resize: vertical; }
+      .persona-custom { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 11px 14px; margin-bottom: 8px; max-width: 640px; flex-wrap: wrap; }
+      .persona-custom.active-persona { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+      .persona-custom .pc-meta { flex: 1; min-width: 180px; }
+      .persona-custom .pc-meta strong { display: block; font-size: 15px; }
+      .persona-custom .pc-meta span { font-size: 12.5px; color: var(--ink-2); display: block; overflow-wrap: anywhere; }
+      .persona-custom button { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 5px 12px; font-size: 13px; font-weight: 600; min-height: 2.1rem; }
+      .persona-custom button:hover { border-color: var(--accent); color: var(--accent-ink); }
+      .persona-custom .pc-del:hover { border-color: var(--err); color: var(--err); }
+      .persona-note { font-size: 14px; color: var(--accent-ink); background: var(--accent-soft); border-radius: 10px; padding: 9px 13px; margin-bottom: 14px; max-width: 640px; display: none; }
+      .persona-note.show { display: block; }
+
       /* Code studio (live preview) */
       @media (max-width: 820px) {
         .topbar { flex-wrap: wrap; }
@@ -549,6 +567,7 @@
             <button type="button" role="tab" id="tabPrompts" aria-selected="false">Prompts</button>
             <button type="button" role="tab" id="tabCode" aria-selected="false">Code</button>
             <button type="button" role="tab" id="tabGallery" aria-selected="false">Gallery</button>
+            <button type="button" role="tab" id="tabPersona" aria-selected="false">পারসোনা</button>
             <button type="button" role="tab" id="tabExt" aria-selected="false">Extension</button>
             <button type="button" role="tab" id="tabRepos" aria-selected="false">Repos</button>
           </div>
@@ -623,6 +642,31 @@
             <div class="gallery-grid" id="galleryGrid"></div>
           </section>
 
+          <!-- Personas -->
+          <section class="panel-view" id="personaView" aria-label="Personas — নিজের পারসোনা">
+            <h2>নিজের পারসোনা</h2>
+            <p class="lede">একটা পারসোনা বাছলে বট ঠিক সেই ধরনেই কথা বলবে — শিক্ষকের মতো ধীরে ধীরে বোঝাবে, বন্ধুর মতো আড্ডা দেবে, গল্পকারের মতো গল্প শোনাবে। নিজের পছন্দমতো নতুন পারসোনাও বানানো যায় নিচের ফর্মে। পারসোনা শুধু এই খোলা পেজেই থাকে — reload করলেই মুছে যাবে, আর পারসোনা বদলালে বা মুছলে আগের চ্যাট কিছুই ভাঙবে না।</p>
+            <div class="persona-note" id="personaNote"></div>
+            <div class="prompt-grid" id="personaGrid"></div>
+            <h3>নিজের পারসোনা বানাও</h3>
+            <div class="persona-form">
+              <label for="pName">নাম — Persona name</label>
+              <input type="text" id="pName" maxlength="40" placeholder="যেমন: দাদু · হিসাব স্যার · রান্নার বন্ধু" />
+              <label for="pRole">ভূমিকা / নির্দেশনা — Role &amp; instructions</label>
+              <textarea id="pRole" placeholder="সে কে, কীভাবে কথা বলবে, কী করবে — যেমন: তুমি আমার দাদু, গ্রামের গল্প আর নিজের অভিজ্ঞতা দিয়ে সবকিছু বুঝিয়ে দেবে"></textarea>
+              <label for="pTone">টোন — Tone</label>
+              <input type="text" id="pTone" maxlength="60" placeholder="যেমন: মজার ও উষ্ণ · গম্ভীর · উৎসাহী" />
+              <label for="pLang">ভাষা — Language</label>
+              <select id="pLang">
+                <option value="bn">বাংলা</option>
+                <option value="en">English</option>
+              </select>
+              <div style="margin-top:12px"><button type="button" class="dl-btn" id="personaCreate" style="font-size:14px;padding:8px 16px;margin-top:0">বানিয়ে চালু করো</button></div>
+            </div>
+            <h3>আমার বানানো পারসোনা</h3>
+            <div id="customPersonaList"></div>
+          </section>
+
           <!-- Repos view -->
           <section class="repos" id="reposView" aria-label="Open-source repos behind this bot">
             <h2>Built from open-source repos</h2>
@@ -660,12 +704,18 @@
             <button type="button" data-tool="en">Translate → English</button>
             <button type="button" data-tool="para">Paraphrase</button>
             <button type="button" data-tool="fix">বানান ও ব্যাকরণ ঠিক করো</button>
+            <button type="button" id="briefingBtn" style="display:inline-flex;align-items:center;gap:6px" title="সকালের ব্রিফিং — আজকের আবহাওয়া + তাজা খবর এক চ্যাটে। শহর বদলাতে আগে বক্সে শহরের নাম লিখে তারপর চাপো (ডিফল্ট: ঢাকা)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>সকালের ব্রিফিং</button>
           </div>
           <form class="composer" id="composerForm">
             <div class="doc-chip" id="docChip">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
               <span id="docName">document</span>
               <button class="x" type="button" id="docRemove" aria-label="Remove document">✕</button>
+            </div>
+            <div class="doc-chip" id="personaChip">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+              <span id="personaChipName">পারসোনা</span>
+              <button class="x" type="button" id="personaChipOff" aria-label="পারসোনা বন্ধ করো — turn persona off">✕</button>
             </div>
             <div class="tutor-bar" id="tutorBar">
               <span class="tutor-label">বাংলা শিক্ষক:</span>
@@ -690,6 +740,9 @@
               </button>
               <button class="tool-btn" type="button" id="tutorBtn" aria-label="Bengali tutor mode" title="বাংলা শিক্ষক — Bengali tutor: lessons explained in Bangla, quizzes, exam prep" aria-pressed="false">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg>
+              </button>
+              <button class="tool-btn" type="button" id="personaBtn" aria-label="Personas" title="নিজের পারসোনা — শিক্ষক, বন্ধু, গল্পকার বা নিজের বানানো পারসোনা বাছো" aria-pressed="false">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
               </button>
               <button class="tool-btn" type="button" id="callBtn" aria-label="Voice call mode" title="Voice call — talk and listen, hands-free, turn by turn">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -836,6 +889,21 @@
       var attachedDoc = null; // {name, text}
       var view = "chat";
       var tutorMode = false;
+      /* Personas — session only, like the chats; never stored anywhere */
+      var PERSONA_PRESETS = [
+        { id: "pre-teacher", name: "শিক্ষক", desc: "ধীরে ধীরে, সহজ বাংলায়, ধাপে ধাপে উদাহরণসহ বুঝিয়ে দেবে।",
+          sys: "তুমি একজন ধৈর্যশীল শিক্ষক। সবকিছু ধীরে ধীরে, সহজ বাংলায় বুঝিয়ে দাও। প্রতিটা বিষয় ছোট ছোট ধাপে ভাগ করো, প্রতিটা ধাপে একটা করে বাস্তব জীবনের উদাহরণ দাও। কঠিন শব্দ ব্যবহার করলে পাশে সহজ অর্থ দাও। শেষে একটা ছোট প্রশ্ন করে যাচাই করো, ছাত্রটা বুঝেছে কিনা। সবসময় বাংলায় উত্তর দাও।" },
+        { id: "pre-friend", name: "বন্ধু", desc: "একদম সহজ ভাষায়, মজা করে, আড্ডার মতো কথা বলবে।",
+          sys: "তুমি একজন ঘনিষ্ঠ বন্ধু। একদম সহজ, স্বাভাবিক ভাষায় আড্ডার মতো করে কথা বলো — মজা করো, মাঝে মাঝে হালকা রসিকতা করো, আনুষ্ঠানিক ভাষা এড়িয়ে চলো। যেভাবে ভাষায় প্রশ্ন আসবে (বাংলা, ইংরেজি বা দুটো মেশানো) ঠিক সেভাবেই উত্তর দাও। উত্তর ছোট আর প্রাণবন্ত রাখো, লেকচারের মতো লম্বা করো না।" },
+        { id: "pre-storyteller", name: "গল্পকার", desc: "বাচ্চাদের জন্য রঙিন, মজার গল্প শোনাবে বাংলায়।",
+          sys: "তুমি একজন গল্পকার। বাচ্চাদের জন্য রঙিন, মজার গল্প শোনাও সহজ বাংলায়। গল্পে ছোট ছোট চরিত্র, সংলাপ আর সুন্দর বর্ণনা থাকবে, আর শেষে একটা ছোট্ট ভালো শিক্ষা থাকতে পারে। গল্প চাইলে গল্প বানাও; অন্য প্রশ্নের উত্তরও গল্পের ছলে দাও। ভাষা সবসময় সহজ ও বাচ্চাদের উপযোগী রাখো।" },
+        { id: "pre-codementor", name: "কোডিং মেন্টর", desc: "কোড ধাপে ধাপে বুঝিয়ে দেবে, উদাহরণ আর প্র্যাকটিসসহ।",
+          sys: "You are a patient coding mentor. Explain code and programming concepts step by step in simple language — Bangla when the user writes Bangla, otherwise English. Show small runnable examples, explain WHY each part works, point out common beginner mistakes, and end with one small practice task. Never dump code without explaining it." },
+        { id: "pre-englishteacher", name: "ইংরেজি শিক্ষক", desc: "বাংলা দিয়ে ইংরেজি শেখাবে, ভুল ধরিয়ে দেবে নরমভাবে।",
+          sys: "You are an English teacher for a Bangla-speaking learner. Teach English in small steps: give the English sentence first, then its Bangla meaning, then a tiny grammar note in Bangla. Correct the learner's English mistakes gently — show the wrong sentence, the corrected sentence, and briefly why. End each reply with one small practice sentence for the learner to translate into English." }
+      ];
+      var customPersonas = [];   // {id, name, desc, sys, tone, lang} — this page session only
+      var activePersonaId = null;
       var folders = [];        // {id, name} — session only, like the chats themselves
       var openMoveFor = null;  // chat id whose "move to folder" menu is open
       var sendGen = 0;         // bumped on every send and on Stop — stale replies are dropped
@@ -957,6 +1025,7 @@
 
       /* ================= Rendering ================= */
       var SUGGESTIONS = [
+        { t: "সকালের ব্রিফিং", s: "আজকের আবহাওয়া + তাজা খবর, এক চ্যাটে (ডিফল্ট শহর: ঢাকা)", q: "BRIEFING:" },
         { t: "বাংলায় নিজের পরিচয় দাও", s: "Ask the bot to introduce itself in Bangla", q: "বাংলায় নিজের পরিচয় দাও" },
         { t: "Explain simply", s: "How does rain form? Explain it for a 10-year-old", q: "How does rain form? Explain it simply, for a 10-year-old." },
         { t: "Write something", s: "A short poem about the Padma river at dusk", q: "Write a short poem about the Padma river at dusk." },
@@ -978,7 +1047,9 @@
           for (var i = 0; i < btns.length; i++) {
             btns[i].addEventListener("click", function () {
               var sg = SUGGESTIONS[Number(this.getAttribute("data-sug"))];
-              if (sg.q.indexOf("IMAGE:") === 0) {
+              if (sg.q === "BRIEFING:") {
+                morningBriefing();
+              } else if (sg.q.indexOf("IMAGE:") === 0) {
                 setImageMode(true);
                 $("input").value = sg.q.slice(6);
                 $("input").focus(); autoGrow();
@@ -1021,7 +1092,8 @@
               }).join(" · ") + "</div>";
             }
             out += '<div class="msg ai"><div class="who"><span class="dot">A</span>' +
-              (m.via ? '<span class="badge">via ' + esc(m.via) + "</span>" : "") + '</div><div class="body">' +
+              (m.via ? '<span class="badge">via ' + esc(m.via) + "</span>" : "") +
+              (m.persona ? '<span class="badge">' + esc(m.persona) + "</span>" : "") + '</div><div class="body">' +
               (m.image ? '<img class="gen" alt="Generated image" src="' + esc(m.image) + '">' : formatBody(m.content)) +
               srcHtml +
               '</div><div class="actions">' +
@@ -1282,6 +1354,8 @@
       function buildMessages(chat, searchCtx, linkCtx) {
         var msgs = [];
         var sys = styleSystem($("styleSel").value);
+        var activeP = getActivePersona();
+        if (activeP) sys = activeP.sys;
         if (tutorMode) {
           sys = "You are a kind, patient Bengali tutor (বাংলা শিক্ষক) teaching a student in Bangladesh. ALWAYS teach in clear, simple Bangla (Bengali), even if the student writes in English. Explain lessons step by step with small everyday examples. For quizzes, ask ONE question at a time, wait for the student's answer, then say whether it is right or wrong and briefly why before asking the next question. For exam preparation, pick the most important and likely questions and give short model answers. " + sys;
         }
@@ -1435,7 +1509,7 @@
 
         runChain(messages, function (res, tried, pinned) {
           if (res) {
-            chat.messages.push({ role: "assistant", content: res.content, via: res.via, sources: searchCtx ? searchCtx.sources : (linkCtx ? [{ title: "Page you shared", url: linkCtx.url }] : null), related: searchCtx ? searchCtx.related : null });
+            chat.messages.push({ role: "assistant", content: res.content, via: res.via, persona: activePersonaName(), sources: searchCtx ? searchCtx.sources : (linkCtx ? [{ title: "Page you shared", url: linkCtx.url }] : null), related: searchCtx ? searchCtx.related : null });
             finishSend();
             return;
           }
@@ -1632,6 +1706,165 @@
         if (sending) return;
         $("input").value = templates[kind] + topic;
         sendCurrent();
+      }
+
+      /* ================= Personas (নিজের পারসোনা) — session only ================= */
+      function getActivePersona() {
+        if (!activePersonaId) return null;
+        var all = PERSONA_PRESETS.concat(customPersonas);
+        for (var i = 0; i < all.length; i++) if (all[i].id === activePersonaId) return all[i];
+        return null;
+      }
+      function activePersonaName() {
+        var p = getActivePersona();
+        return p ? p.name : null;
+      }
+      function setActivePersona(id) {
+        activePersonaId = id || null;
+        renderPersonas();
+      }
+      function updatePersonaUI() {
+        var p = getActivePersona();
+        var chip = $("personaChip");
+        if (chip) {
+          chip.classList.toggle("show", !!p);
+          if (p) $("personaChipName").textContent = "পারসোনা: " + p.name;
+        }
+        var btn = $("personaBtn");
+        if (btn) {
+          btn.classList.toggle("on", !!p);
+          btn.setAttribute("aria-pressed", p ? "true" : "false");
+        }
+        var note = $("personaNote");
+        if (note) {
+          note.classList.toggle("show", !!p);
+          if (p) note.textContent = "এখন সক্রিয় পারসোনা: " + p.name + " — পরের সব উত্তর এই ধরনে আসবে। বদলাতে নিচে অন্য কার্ড চাপো, বন্ধ করতে “সাধারণ” চাপো।";
+        }
+      }
+      function renderPersonas() {
+        var grid = $("personaGrid");
+        if (!grid) return;
+        var cards = [{ id: "", name: "সাধারণ", desc: "কোনো পারসোনা না — বট নিজের স্বাভাবিক ধরনে উত্তর দেবে।", kind: "বন্ধ" }];
+        PERSONA_PRESETS.forEach(function (p) { cards.push({ id: p.id, name: p.name, desc: p.desc, kind: "রেডিমেড" }); });
+        customPersonas.forEach(function (p) { cards.push({ id: p.id, name: p.name, desc: p.desc, kind: "আমার বানানো" }); });
+        grid.innerHTML = cards.map(function (c) {
+          var active = (c.id || null) === activePersonaId;
+          return '<button type="button" class="prompt-card' + (active ? " active-persona" : "") + '" data-persona="' + esc(c.id) + '"><span class="kind">' + esc(c.kind) + "</span><h3>" + esc(c.name) + (active ? " ✓ সক্রিয়" : "") + "</h3><p>" + esc(c.desc) + "</p></button>";
+        }).join("");
+        grid.querySelectorAll("[data-persona]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            setActivePersona(this.getAttribute("data-persona") || null);
+            var p = getActivePersona();
+            toast(p ? "পারসোনা চালু: " + p.name + " — পরের উত্তরগুলো এই ধরনে আসবে" : "পারসোনা বন্ধ — এখন সাধারণভাবে উত্তর আসবে");
+            setView("chat");
+            $("input").focus();
+          });
+        });
+        var list = $("customPersonaList");
+        if (!customPersonas.length) {
+          list.innerHTML = '<p class="lede">এখনো নিজে কোনো পারসোনা বানাওনি — উপরের ফর্মে নাম আর ভূমিকা লিখলেই হয়ে যাবে।</p>';
+        } else {
+          list.innerHTML = customPersonas.map(function (p) {
+            var active = p.id === activePersonaId;
+            return '<div class="persona-custom' + (active ? " active-persona" : "") + '"><div class="pc-meta"><strong>' + esc(p.name) + (active ? " ✓ সক্রিয়" : "") + "</strong><span>" + esc(p.desc) + "</span><span>" + (p.tone ? "টোন: " + esc(p.tone) + " · " : "") + (p.lang === "en" ? "ভাষা: English" : "ভাষা: বাংলা") + '</span></div>' +
+              '<button type="button" data-puse="' + p.id + '">ব্যবহার করো</button>' +
+              '<button type="button" class="pc-del" data-pdel="' + p.id + '">মুছো</button></div>';
+          }).join("");
+          list.querySelectorAll("[data-puse]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              setActivePersona(this.getAttribute("data-puse"));
+              var p = getActivePersona();
+              toast("পারসোনা চালু: " + (p ? p.name : ""));
+              setView("chat");
+            });
+          });
+          list.querySelectorAll("[data-pdel]").forEach(function (b) {
+            b.addEventListener("click", function () { deletePersona(this.getAttribute("data-pdel")); });
+          });
+        }
+        updatePersonaUI();
+      }
+      function createPersona() {
+        var name = $("pName").value.trim();
+        var role = $("pRole").value.trim();
+        var tone = $("pTone").value.trim();
+        var lang = $("pLang").value === "en" ? "en" : "bn";
+        if (!name) { toast("আগে পারসোনার নামটা লেখো"); $("pName").focus(); return; }
+        if (!role) { toast("ভূমিকা / নির্দেশনাটা লেখো — সে কে আর কীভাবে কথা বলবে"); $("pRole").focus(); return; }
+        var sys = 'You are acting as a persona called "' + name + '". Follow these role instructions exactly: ' + role +
+          (tone ? " Tone of voice: " + tone + "." : "") +
+          (lang === "bn" ? " Always reply in Bangla (Bengali)." : " Always reply in English.");
+        var p = { id: "cp" + Date.now() + Math.floor(Math.random() * 999), name: name, desc: role.length > 110 ? role.slice(0, 110) + "…" : role, sys: sys, tone: tone, lang: lang };
+        customPersonas.push(p);
+        $("pName").value = ""; $("pRole").value = ""; $("pTone").value = "";
+        setActivePersona(p.id);
+        toast("পারসোনা তৈরি আর চালু: " + name + " — এখন চ্যাটে গিয়ে কথা বলো");
+        setView("chat");
+        $("input").focus();
+      }
+      function deletePersona(id) {
+        var gone = null;
+        customPersonas = customPersonas.filter(function (p) { if (p.id === id) gone = p; return p.id !== id; });
+        if (activePersonaId === id) activePersonaId = null;
+        renderPersonas();
+        toast("পারসোনা মোছা হয়েছে" + (gone ? ": " + gone.name : "") + " — আগের চ্যাটগুলো ঠিকই আছে");
+      }
+
+      /* ================= Morning briefing (সকালের ব্রিফিং) =================
+         Reuses the exact web-search code path: weather from Open-Meteo and
+         headlines from DuckDuckGo, via fetchSearchContext — no new provider. */
+      function morningBriefing() {
+        if (sending) { toast("আগের উত্তরটা শেষ হোক — অথবা Stop চাপো"); return; }
+        setView("chat");
+        var typed = $("input").value.trim();
+        var city = typed || "Dhaka";
+        var cityLabel = typed || "ঢাকা (Dhaka)";
+        $("input").value = ""; autoGrow();
+        var chat = ensureChat();
+        chat.messages.push({ role: "user", content: "সকালের ব্রিফিং দাও — আজকের আবহাওয়া (" + cityLabel + ") আর তাজা খবর" });
+        if (chat.title === "New chat") chat.title = "সকালের ব্রিফিং";
+        var myGen = ++sendGen;
+        sending = true; setSendStopUI(true);
+        renderChatList(); renderThread();
+        toast("ব্রিফিং তৈরি হচ্ছে — লাইভ আবহাওয়া আর তাজা খবর আনা হচ্ছে…");
+        var weatherQ = "weather in " + city + " today";
+        var newsQ = "latest news headlines today";
+        Promise.all([fetchSearchContext(weatherQ), fetchSearchContext(newsQ)]).then(function (rs) {
+          if (myGen !== sendGen) return;
+          var w = rs[0], n = rs[1];
+          var ctxLines = [];
+          ctxLines.push("আবহাওয়া (" + city + "): " + (w && w.context ? w.context : "লাইভ আবহাওয়ার তথ্য পাওয়া যায়নি।"));
+          ctxLines.push("তাজা খবর: " + (n && n.context ? n.context : "তাজা খবরের তথ্য পাওয়া যায়নি।"));
+          var sources = [], seenSrc = {};
+          [w, n].forEach(function (r) {
+            if (!r) return;
+            (r.sources || []).forEach(function (s) {
+              var k = s.title + "|" + (s.url || "");
+              if (!seenSrc[k] && sources.length < 6) { seenSrc[k] = 1; sources.push(s); }
+            });
+          });
+          var merged = { context: ctxLines.join("\n"), sources: sources, related: n ? n.related : [] };
+          var messages = buildMessages(chat, merged, null);
+          messages[0].content += " The user asked for a MORNING BRIEFING (সকালের ব্রিফিং). Write ONE single reply, entirely in Bangla (Bengali): start with a short warm greeting, then today's weather for " + city + " — the temperature and the chance of rain — using ONLY the weather data above, then the top fresh news headlines as a short numbered list using ONLY the news data above. If the data above says the weather or the news could not be found, say that honestly in Bangla. NEVER invent temperatures, rain chances, or headlines.";
+          runChain(messages, function (res, tried, pinned) {
+            if (myGen !== sendGen) return;
+            sending = false; setSendStopUI(false);
+            if (res) {
+              chat.messages.push({ role: "assistant", content: res.content, via: res.via, persona: activePersonaName(), sources: sources.length ? sources : null, related: merged.related });
+            } else {
+              var detail;
+              if (pinned === "auto") {
+                detail = "ব্রিফিং তৈরি করা গেল না — কোনো provider উত্তর দেয়নি। চেষ্টা করা হয়েছে: " + tried.join(" · ") + "।" +
+                  (KEYED.some(function (k) { return !keys[k]; }) ? " Groq, OpenRouter, Gemini আর Mistral-এর key Settings-এ না দিলে সেগুলো বাদ থাকে।" : "");
+              } else {
+                detail = "ব্রিফিং তৈরি করা গেল না — " + PROVIDERS[pinned].name + " উত্তর দেয়নি। " + (tried[0] || "");
+              }
+              chat.messages.push({ role: "assistant", error: true, content: detail });
+            }
+            renderChatList(); renderThread();
+            $("input").focus();
+          });
+        });
       }
 
       /* ================= Image gallery ================= */
@@ -2021,11 +2254,13 @@
         $("tabExt").setAttribute("aria-selected", v === "ext" ? "true" : "false");
         $("tabCode").setAttribute("aria-selected", v === "code" ? "true" : "false");
         $("tabGallery").setAttribute("aria-selected", v === "gallery" ? "true" : "false");
+        $("tabPersona").setAttribute("aria-selected", v === "persona" ? "true" : "false");
         $("reposView").classList.toggle("show", v === "repos");
         $("promptsView").classList.toggle("show", v === "prompts");
         $("extView").classList.toggle("show", v === "ext");
         $("codeView").classList.toggle("show", v === "code");
         $("galleryView").classList.toggle("show", v === "gallery");
+        $("personaView").classList.toggle("show", v === "persona");
         if (v === "code") initStudio();
         if (v === "gallery") renderGallery();
         var inChat = v === "chat";
@@ -2056,6 +2291,7 @@
         loadMemory();
         renderMemory();
         renderPrompts();
+        renderPersonas();
         newChat();
 
         $("composerForm").addEventListener("submit", function (e) { e.preventDefault(); sendCurrent(); });
@@ -2075,6 +2311,14 @@
         $("tabCode").addEventListener("click", function () { setView("code"); });
         $("tabExt").addEventListener("click", function () { setView("ext"); });
         $("tabGallery").addEventListener("click", function () { setView("gallery"); });
+        $("tabPersona").addEventListener("click", function () { setView("persona"); });
+        $("personaBtn").addEventListener("click", function () { setView("persona"); });
+        $("personaCreate").addEventListener("click", createPersona);
+        $("personaChipOff").addEventListener("click", function () {
+          setActivePersona(null);
+          toast("পারসোনা বন্ধ — এখন সাধারণভাবে উত্তর আসবে");
+        });
+        $("briefingBtn").addEventListener("click", morningBriefing);
         $("searchBtn").addEventListener("click", function () {
           webSearch = !webSearch;
           this.classList.toggle("on", webSearch);
