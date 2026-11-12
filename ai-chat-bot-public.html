@@ -1394,27 +1394,31 @@
       }
 
       /* ================= Code studio (live preview) ================= */
-      var studioTimer = null, studioInit = false;
+      var studioTimer = null, studioInit = false, studioGen = 0;
       var STUDIO_SAMPLE = {
         html: '<h1>আসসালামু আলাইকুম!</h1>\n<p>This page is being built live — edit any tab and watch.</p>\n<button id="b">Tap me</button>\n<p id="n">Taps: 0</p>',
         css: 'body { font-family: system-ui; text-align: center; padding: 30px; background: #fdf6ec; color: #33302a; }\nh1 { color: #b5502a; }\nbutton { background: #b5502a; color: #fff; border: none; padding: 10px 22px; border-radius: 999px; font-size: 16px; cursor: pointer; }',
         js: 'var n = 0;\nvar btn = document.getElementById("b");\nif (btn) {\n  btn.onclick = function () {\n    n++;\n    var label = document.getElementById("n");\n    if (label) label.textContent = "Taps: " + n;\n    console.log("tapped", n);\n  };\n}\nconsole.log("studio ready");'
       };
-      function studioDoc() {
+      function studioDoc(gen) {
         var css = $("codeCss").value, html = $("codeHtml").value, js = $("codeJs").value;
         return '<!doctype html><html><head><meta charset="utf-8"><style>' + css.replace(/<\/style>/gi, "<\\/style>") + "</style></head><body>" +
           html +
-          "<script>var L=[];function f(a){return a.map(function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')}" +
-          "console.log=function(){L.push(f([].slice.call(arguments)));parent.postMessage({t:'studio',lines:L.slice()},'*')};" +
-          "console.error=function(){L.push('Error: '+f([].slice.call(arguments)));parent.postMessage({t:'studio',lines:L.slice()},'*')};" +
-          "window.onerror=function(m){L.push('Error: '+m);parent.postMessage({t:'studio',lines:L.slice()},'*');};" +
+          "<script>var G=" + gen + ";var L=[];function f(a){return a.map(function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')}" +
+          "var P=(function(g){return function(){parent.postMessage({t:'studio',g:g,lines:L.slice()},'*')};})(G);" +
+          "console.log=function(){L.push(f([].slice.call(arguments)));P()};" +
+          "console.error=function(){L.push('Error: '+f([].slice.call(arguments)));P()};" +
+          "window.onerror=function(m){L.push('Error: '+m);P();};" +
           "try{\n" + js.replace(/<\/script>/gi, "<\\/script>") + "\n}catch(e){L.push('Error: '+(e&&e.message?e.message:e));}" +
-          "parent.postMessage({t:'studio',lines:L},'*');<\/script></body></html>";
+          "P();<\/script></body></html>";
       }
       function renderStudio(manual) {
-        $("studioFrame").srcdoc = studioDoc();
-        $("studioState").textContent = manual ? "Run just now" : "Preview updated";
+        clearTimeout(studioTimer);
+        var gen = ++studioGen;
+        var doc = studioDoc(gen);
         $("studioOut").textContent = "Running…";
+        $("studioState").textContent = manual ? "Run just now" : "Preview updated";
+        $("studioFrame").srcdoc = doc;
       }
       function scheduleStudio() {
         $("studioState").textContent = "Typing… preview in a moment";
@@ -1438,7 +1442,7 @@
         $("ctCss").addEventListener("click", function () { pick("ctCss"); });
         $("ctJs").addEventListener("click", function () { pick("ctJs"); });
         window.addEventListener("message", function (ev) {
-          if (ev.source !== $("studioFrame").contentWindow || !ev.data || ev.data.t !== "studio") return;
+          if (ev.source !== $("studioFrame").contentWindow || !ev.data || ev.data.t !== "studio" || ev.data.g !== studioGen) return;
           var lines = ev.data.lines || [];
           $("studioOut").innerHTML = lines.length ? lines.map(function (ln) {
             return '<span class="' + (String(ln).indexOf("Error:") === 0 ? "err-line" : "") + '">' + esc(ln) + "</span>";
