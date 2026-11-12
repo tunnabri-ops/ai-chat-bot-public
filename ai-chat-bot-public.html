@@ -444,6 +444,9 @@
         border-radius: 10px; padding: 8px 13px; font-size: 13.5px; font-weight: 600;
       }
       .brief-status.show { display: block; }
+      /* Per-step news diagnostic line — shown only when the news fetch came
+         back empty, so a failure says WHICH step failed and how. */
+      .brief-diag { margin: 8px 0 0; font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
 
       /* Personas */
       .prompt-card.active-persona { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -1647,7 +1650,13 @@
          failure and Stop — so it can never linger under a finished reply. */
       function setBriefStatus(on) {
         var el = $("briefStatus");
-        if (el) el.classList.toggle("show", !!on);
+        if (!el) return;
+        el.classList.toggle("show", !!on);
+        // Hiding must also EMPTY the text: the element is a role="status"
+        // live region, so leftover text reads as unfinished output to a
+        // screen reader (and to anyone inspecting the DOM). Showing
+        // restores the default text before it becomes visible again.
+        el.textContent = on ? "ব্রিফিং তৈরি হচ্ছে — লাইভ আবহাওয়া আর তাজা খবর আনা হচ্ছে…" : "";
       }
       function regenerate() {
         if (sending) return;
@@ -1992,6 +2001,29 @@
         });
         return out;
       }
+      function parseRssXml(xml) {
+        // Regex-based RSS item parser (no DOMParser, so the same code is
+        // testable in Node). Decodes the handful of XML entities and CDATA
+        // wrappers that Google News / BBC feeds actually use, then reuses
+        // the rss2json shape through parseGnItems.
+        function dec(s) {
+          return String(s || "")
+            .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+            .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+            .replace(/&#(\d+);/g, function (m, n) { return String.fromCharCode(Number(n)); })
+            .replace(/&amp;/g, "&");
+        }
+        function field(block, tag) {
+          var m = block.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
+          return m ? dec(m[1]).replace(/\s+/g, " ").trim() : "";
+        }
+        var items = [], re = /<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/gi, m;
+        while ((m = re.exec(String(xml || ""))) && items.length < 10) {
+          items.push({ title: field(m[1], "title"), link: field(m[1], "link"), author: field(m[1], "source") });
+        }
+        return parseGnItems(items);
+      }
       function parseGdeltArticles(articles) {
         var out = [];
         (articles || []).forEach(function (a) {
@@ -2027,37 +2059,48 @@
         return out;
       }
 
-      /* Structured headlines — a FALLBACK CHAIN, tried in order until one
-         step returns real items (later steps only top up a short list).
-         Why not just DuckDuckGo (the old code)? Verified by live fetches at
-         build time: api.duckduckgo.com answers with CORS * and valid JSON,
-         but for news queries the payload is an EMPTY stub (AbstractText "",
-         RelatedTopics []) — the Instant Answer API is not a news search, so
-         the old code collected zero headlines every time. The HTML/Lite
-         endpoints are worse from a browser page: no CORS header at all, and
-         they return a bot-challenge page with no results. Google News RSS
-         has real headlines but no CORS header either, so it is read through
-         rss2json (which reflects the page Origin) — and GDELT's own API
-         sends Access-Control-Allow-Origin: *. Steps:
+      /* Structured headlines — every source is tried IN PARALLEL under
+         ONE overall budget, and every step's outcome is RECORDED, so a
+         failed briefing can say exactly which step failed and how.
+         Round-2 diagnosis (why this shape): the old sequential chain
+         (15+15+15+12+20 s of per-step timeouts, ~77 s worst case) hid
+         every error behind silent .catch(function(){}) handlers, so the
+         live page showed "খবর আনা যায়নি" with no clue attached. Endpoint
+         probes with a browser Origin header showed: rss2json answers 200
+         with the Origin reflected and real items; r.jina.ai on BBC
+         answers 200 with markdown; GDELT is rate-limited (HTTP 429 plain
+         text, "one request every 5 seconds"); api.duckduckgo.com returns
+         an EMPTY reply at the network level (and its Instant Answer
+         payload is an empty stub for news queries anyway). So network
+         failure before parsing — not the parsers — is what empties the
+         list, and only per-step diagnostics can prove which one.
+         Steps (all parallel except the last):
            1. rss2json ← Google News RSS (Bangladesh edition top stories)
-           2. rss2json ← Google News RSS search "Bangladesh" (top-up)
-           3. GDELT Doc API (real articles; rate-limited to 1 req / 5 s, so
-              a plain-text throttle reply is treated as a clean miss)
-           4. DuckDuckGo Instant Answer API (the original source — kept
-              because entity queries occasionally return RelatedTopics)
-           5. r.jina.ai reader on the BBC News front page (markdown links)
-           6. Free gateway, LAST RESORT and extraction-only: it may only
-              pull headlines out of text step 5 actually fetched — it is
-              never asked to recall or write news itself.
-         Resolves to an array (possibly empty) of {title, source, url};
-         every entry came from a fetched payload — nothing is made up. */
+           2. rss2json ← Google News RSS search "Bangladesh"
+           3. rss2json ← BBC News RSS feed
+           4. AllOrigins proxy ← Google News RSS XML (parseRssXml)
+           5. GDELT Doc API (real articles, rate-limited)
+           6. DuckDuckGo Instant Answer API (entity queries occasionally
+              return RelatedTopics — never real news headlines)
+           7. r.jina.ai reader on the BBC News front page (markdown links)
+           8. Free gateway, AFTER the parallel phase and extraction-only:
+              it may only pull headlines out of text step 7 actually
+              fetched, and only runs when fewer than 3 headlines were
+              found — it is never asked to recall or write news itself.
+         Resolves to { items, diag }: items is an array (possibly empty)
+         of {title, source, url} built ONLY from fetched payloads —
+         nothing is made up — and diag is one entry per step,
+         { name, ok, count, err }, rendered under the news block whenever
+         the headline list ends up empty. */
       function fetchBriefingNews() {
-        var found = [], seen = {};
-        function addList(list) {
-          (list || []).forEach(function (item) {
-            if (!item.url || seen[item.url] || found.length >= 5) return;
-            seen[item.url] = 1; found.push(item);
-          });
+        function errLabel(err) {
+          var m = String(err && err.message ? err.message : err || "");
+          var http = m.match(/HTTP (\d{3})/);
+          if (http) return "HTTP " + http[1];
+          if (/not ok/i.test(m)) return "not ok";
+          if (/abort|timed?\s?out/i.test(m)) return "timeout";
+          if (/failed to fetch|network|load failed/i.test(m)) return "Failed to fetch";
+          return m ? m.slice(0, 40) : "Failed to fetch";
         }
         function rss2json(feedUrl) {
           return fetchTimeout("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(feedUrl) + "&count=8", {}, 15000)
@@ -2069,7 +2112,7 @@
         }
         function ddg(q) {
           return fetchTimeout("https://api.duckduckgo.com/?q=" + encodeURIComponent(q) + "&format=json&no_html=1&skip_disambig=1", {}, 12000)
-            .then(function (r) { return r.json(); })
+            .then(function (r) { if (!r.ok) throw new Error("ddg HTTP " + r.status); return r.json(); })
             .then(function (j) {
               var out = [];
               if (j.AbstractText && j.AbstractURL) {
@@ -2085,41 +2128,102 @@
             });
         }
         var bbcText = "";
-        var steps = [
-          function () { return rss2json("https://news.google.com/rss?hl=en-US&gl=BD&ceid=BD:en"); },
-          function () { return rss2json("https://news.google.com/rss/search?q=Bangladesh&hl=en-US&gl=BD&ceid=BD:en"); },
-          function () {
-            return fetchTimeout("https://api.gdeltproject.org/api/v2/doc/doc?query=bangladesh&mode=ArtList&maxrecords=10&format=json&sort=datedesc", {}, 15000)
-              .then(function (r) { if (!r.ok) throw new Error("gdelt HTTP " + r.status); return r.json(); })
-              .then(function (j) { return parseGdeltArticles(j && j.articles); });
-          },
-          function () { return ddg("Bangladesh news"); },
-          function () {
-            return fetchTimeout("https://r.jina.ai/https://www.bbc.com/news", {}, 20000)
-              .then(function (r) { if (!r.ok) throw new Error("reader HTTP " + r.status); return r.text(); })
-              .then(function (t) { bbcText = String(t || ""); return parseBbcMarkdown(bbcText); });
-          },
-          function () {
-            // Extraction only, over text that was really fetched above.
-            if (!bbcText || bbcText.length < 500) return [];
+        var defs = [
+          { name: "GN top", run: function () { return rss2json("https://news.google.com/rss?hl=en-US&gl=BD&ceid=BD:en"); } },
+          { name: "GN search", run: function () { return rss2json("https://news.google.com/rss/search?q=Bangladesh&hl=en-US&gl=BD&ceid=BD:en"); } },
+          { name: "BBC RSS", run: function () { return rss2json("https://feeds.bbci.co.uk/news/rss.xml"); } },
+          { name: "GN via proxy", run: function () {
+              return fetchTimeout("https://api.allorigins.win/raw?url=" + encodeURIComponent("https://news.google.com/rss?hl=en-US&gl=BD&ceid=BD:en"), {}, 15000)
+                .then(function (r) { if (!r.ok) throw new Error("proxy HTTP " + r.status); return r.text(); })
+                .then(function (t) { return parseRssXml(t); });
+            } },
+          { name: "GDELT", run: function () {
+              return fetchTimeout("https://api.gdeltproject.org/api/v2/doc/doc?query=bangladesh&mode=ArtList&maxrecords=10&format=json&sort=datedesc", {}, 15000)
+                .then(function (r) { if (!r.ok) throw new Error("gdelt HTTP " + r.status); return r.json(); })
+                .then(function (j) { return parseGdeltArticles(j && j.articles); });
+            } },
+          { name: "DDG", run: function () { return ddg("Bangladesh news"); } },
+          { name: "BBC page", run: function () {
+              return fetchTimeout("https://r.jina.ai/https://www.bbc.com/news", {}, 18000)
+                .then(function (r) { if (!r.ok) throw new Error("reader HTTP " + r.status); return r.text(); })
+                .then(function (t) { bbcText = String(t || ""); return parseBbcMarkdown(bbcText); });
+            } }
+        ];
+        // Launch every step at once; each settles into an outcome record
+        // that can never reject, so no failure is ever swallowed silently.
+        var outcomes = defs.map(function (d) {
+          return Promise.resolve().then(d.run).then(function (list) {
+            var items = list || [];
+            return { name: d.name, ok: items.length > 0, count: items.length, err: items.length ? "" : "empty", items: items };
+          }, function (err) {
+            return { name: d.name, ok: false, count: 0, err: errLabel(err), items: [] };
+          });
+        });
+        // ONE overall budget (~20 s): resolve with whatever has finished
+        // when the timer fires; steps still pending are reported "timeout".
+        // Late completions cannot leak into a later briefing — each call
+        // works on its own outcome records.
+        var budget = new Promise(function (resolve) { setTimeout(resolve, 20000); });
+        return Promise.race([Promise.allSettled(outcomes), budget]).then(function () {
+          var settled = new Array(defs.length);
+          outcomes.forEach(function (p, i) {
+            // Read each step's current state without waiting for it.
+            p.then(function (o) { settled[i] = o; });
+          });
+          // A resolved value is delivered to .then callbacks queued
+          // BEFORE this continuation, so one microtask turn is enough to
+          // collect every step that has actually finished.
+          return Promise.resolve().then(function () {
+            var found = [], seen = {};
+            var diag = defs.map(function (d, i) {
+              var o = settled[i];
+              if (!o) return { name: d.name, ok: false, count: 0, err: "timeout" };
+              (o.items || []).forEach(function (item) {
+                if (!item.url || seen[item.url] || found.length >= 5) return;
+                seen[item.url] = 1; found.push(item);
+              });
+              return { name: o.name, ok: o.ok, count: o.count, err: o.err };
+            });
+            // Gateway extraction — post-phase, conditional, and only over
+            // text that was really fetched in the parallel phase.
+            if (found.length >= 3 || !bbcText || bbcText.length < 500) {
+              diag.push({ name: "gateway", ok: false, count: 0, err: "skipped" });
+              return { items: found, diag: diag };
+            }
             var msgs = [
               { role: "system", content: "You extract headlines from fetched web page text. Reply with up to 5 lines, each exactly: Headline title | Source name | Full URL — copied VERBATIM from the text (the URL must appear in the text). Do not write, recall or invent any headline, source or URL. If the text contains no headlines with URLs, reply with exactly: NONE" },
               { role: "user", content: bbcText.slice(0, 9000) }
             ];
-            return callGateway(msgs).then(function (g) { return parseExtractedLines(g.content); });
-          }
-        ];
-        var chain = Promise.resolve();
-        steps.forEach(function (step) {
-          chain = chain.then(function () {
-            if (found.length >= 3) return;
-            // Promise.resolve().then(step) so a step may return a plain
-            // array (the extraction step does, when it has no fetched text)
-            // as well as a promise, and a throwing step just misses.
-            return Promise.resolve().then(step).then(addList).catch(function () {});
+            return Promise.race([
+              callGateway(msgs).then(function (g) { return parseExtractedLines(g.content); }),
+              new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 15000); })
+            ]).then(function (list) {
+              if (list == null) {
+                diag.push({ name: "gateway", ok: false, count: 0, err: "timeout" });
+              } else {
+                list.forEach(function (item) {
+                  if (!item.url || seen[item.url] || found.length >= 5) return;
+                  seen[item.url] = 1; found.push(item);
+                });
+                diag.push({ name: "gateway", ok: list.length > 0, count: list.length, err: list.length ? "" : "empty" });
+              }
+              return { items: found, diag: diag };
+            }, function (err) {
+              diag.push({ name: "gateway", ok: false, count: 0, err: errLabel(err) });
+              return { items: found, diag: diag };
+            });
           });
         });
-        return chain.then(function () { return found; });
+      }
+      /* One-line summary of the per-step news outcomes, e.g.
+         "GN top: Failed to fetch · GDELT: HTTP 429 · BBC page: খালি".
+         Shown under the news block (and in the plain-text twin, so it
+         survives Copy/export) only when no headlines were found at all. */
+      function newsDiagLine(diag) {
+        return (diag || []).map(function (d) {
+          var s = d.ok ? (d.count + "টি") : (d.err === "empty" ? "খালি" : (d.err || "ব্যর্থ"));
+          return d.name + ": " + s;
+        }).join(" · ");
       }
 
       /* Sources line for a briefing — built only from fetched data. */
@@ -2174,7 +2278,10 @@
           });
           h += "</ol>";
         } else {
-          h += '<p class="brief-fail">খবর আনা যায়নি</p>';
+          h += '<p class="brief-fail">খবর আনা যায়নি — এই মুহূর্তে তাজা খবর পাওয়া যায়নি।</p>';
+          if (b.newsDiag && b.newsDiag.length) {
+            h += '<p class="brief-diag">ডায়াগনস্টিক: ' + esc(newsDiagLine(b.newsDiag)) + "</p>";
+          }
         }
         h += "</div>";
         var srcs = briefingSources(b);
@@ -2211,7 +2318,8 @@
           lines.push("তাজা খবর:");
           b.headlines.forEach(function (it, i) { lines.push((i + 1) + ". " + it.title + (it.source ? " (" + it.source + ")" : "") + (it.url ? " " + it.url : "")); });
         } else {
-          lines.push("খবর আনা যায়নি");
+          lines.push("খবর আনা যায়নি — এই মুহূর্তে তাজা খবর পাওয়া যায়নি।");
+          if (b.newsDiag && b.newsDiag.length) lines.push("ডায়াগনস্টিক: " + newsDiagLine(b.newsDiag));
         }
         var srcs = briefingSources(b);
         if (srcs.length) lines.push("", "সূত্র / Sources: " + srcs.map(function (s) { return s.title + " " + s.url; }).join(" · "));
@@ -2255,10 +2363,10 @@
         //    its own timeout via fetchTimeout). No data — no invented briefing.
         Promise.all([fetchBriefingWeather(city), fetchBriefingNews()]).then(function (rs) {
           if (myGen !== sendGen) return;
-          var weather = rs[0], headlines = rs[1] || [];
+          var weather = rs[0], news = rs[1] || {}, headlines = news.items || [], newsDiag = news.diag || [];
           if (!weather && !headlines.length) {
             sending = false; setSendStopUI(false); setBriefStatus(false);
-            chat.messages.push({ role: "assistant", error: true, content: "ব্রিফিং আনা গেল না — আবহাওয়া আনা যায়নি, খবরও আনা যায়নি। লাইভ সার্ভিসগুলো এই মুহূর্তে সাড়া দিচ্ছে না; ইন্টারনেট সংযোগ দেখে একটু পরে আবার চেষ্টা করো। কোনো আবহাওয়া বা খবর বানিয়ে দেওয়া হয়নি।" });
+            chat.messages.push({ role: "assistant", error: true, content: "ব্রিফিং আনা গেল না — আবহাওয়া আনা যায়নি, খবরও আনা যায়নি। লাইভ সার্ভিসগুলো এই মুহূর্তে সাড়া দিচ্ছে না; ইন্টারনেট সংযোগ দেখে একটু পরে আবার চেষ্টা করো। কোনো আবহাওয়া বা খবর বানিয়ে দেওয়া হয়নি।" + (newsDiag.length ? "\nডায়াগনস্টিক: " + newsDiagLine(newsDiag) : "") });
             renderChatList(); renderThread();
             $("input").focus();
             return;
@@ -2276,7 +2384,7 @@
           var deliver = function (intro, via) {
             if (myGen !== sendGen) return;
             sending = false; setSendStopUI(false); setBriefStatus(false);
-            var b = { weather: weather, headlines: headlines, intro: intro || "" };
+            var b = { weather: weather, headlines: headlines, intro: intro || "", newsDiag: newsDiag };
             chat.messages.push({ role: "assistant", content: briefingPlainText(b), briefing: b, via: via });
             renderChatList(); renderThread();
             $("input").focus();
