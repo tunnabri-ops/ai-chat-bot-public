@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>AI Chat Bot — Public</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+      :root {
+        --bg: #f6f2ea;
+        --bg-soft: #efe9dc;
+        --surface: #fffdf8;
+        --surface-2: #f1ebdf;
+        --ink: #211e19;
+        --ink-2: #57534a;
+        --ink-3: #8a8478;
+        --line: #e0d7c6;
+        --line-2: #d3c8b2;
+        --accent: #b5502a;
+        --accent-hover: #9c421f;
+        --accent-soft: #f7e3d8;
+        --accent-ink: #8a3a1c;
+        --user-bubble: #efe7d7;
+        --ok: #2e7d46;
+        --err: #b3261e;
+        --shadow: 0 12px 32px rgba(50, 38, 20, 0.14);
+        --radius: 14px;
+        --serif: "Newsreader", "Noto Sans Bengali", Georgia, serif;
+        --sans: ui-sans-system, -apple-system, "Segoe UI", "Noto Sans Bengali", "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #201d19;
+          --bg-soft: #26221d;
+          --surface: #2b2721;
+          --surface-2: #332e27;
+          --ink: #ece5d8;
+          --ink-2: #b8b0a1;
+          --ink-3: #8d8577;
+          --line: #403a31;
+          --line-2: #4d463b;
+          --accent: #d9764e;
+          --accent-hover: #e3855f;
+          --accent-soft: #453026;
+          --accent-ink: #f0a37e;
+          --user-bubble: #38322a;
+          --ok: #6fc48a;
+          --err: #ef8a84;
+          --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 15.5px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      button, select, input, textarea { font: inherit; color: inherit; }
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+      button { cursor: pointer; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      .app { display: flex; height: 100dvh; overflow: hidden; }
+
+      /* ---------- Sidebar ---------- */
+      .sidebar {
+        width: 284px; flex: 0 0 284px;
+        background: var(--bg-soft);
+        border-right: 1px solid var(--line);
+        display: flex; flex-direction: column;
+        min-height: 0;
+      }
+      .side-top { padding: 14px 14px 8px; }
+      .new-chat-btn {
+        width: 100%; display: flex; align-items: center; gap: 9px;
+        background: var(--accent); color: #fff; border: none;
+        border-radius: 10px; padding: 10px 14px; font-weight: 600;
+        min-height: 2.75rem;
+      }
+      .new-chat-btn:hover { background: var(--accent-hover); }
+      .new-chat-btn svg { flex: 0 0 auto; }
+      .side-search { padding: 8px 14px 4px; }
+      .side-search input {
+        width: 100%; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 9px; padding: 8px 11px; font-size: 14px;
+      }
+      .side-search input::placeholder { color: var(--ink-3); }
+      .chat-list { flex: 1; overflow-y: auto; padding: 8px 8px 12px; min-height: 0; }
+      .chat-list h3 {
+        font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--ink-3); margin: 12px 8px 6px; font-weight: 600;
+      }
+      .chat-item {
+        position: relative;
+        display: block; width: 100%;
+        background: none; border: 1px solid transparent; text-align: left;
+        padding: 8px 36px 8px 10px; border-radius: 9px; font-size: 14.5px;
+        color: var(--ink); min-height: 2.5rem;
+      }
+      .chat-item:hover { background: var(--surface-2); }
+      .chat-item.active { background: var(--surface); border: 1px solid var(--line); }
+      .chat-item .t { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .chat-item .del {
+        position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; color: var(--ink-3);
+        border-radius: 6px; padding: 2px 6px; min-height: 2rem; min-width: 2rem;
+        display: none; align-items: center; justify-content: center; font-size: 13px;
+      }
+      .chat-item:hover .del, .chat-item.active .del, .chat-item:focus-visible .del { display: inline-flex; }
+      .chat-item .del:hover { color: var(--err); }
+      .side-empty { color: var(--ink-3); font-size: 13.5px; padding: 6px 10px; }
+      .provider-card {
+        margin: 10px 12px 14px; background: var(--surface);
+        border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 12px 13px;
+      }
+      .provider-card .pc-label { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+      .provider-card .pc-name { font-family: var(--serif); font-size: 19px; font-weight: 600; margin: 2px 0 3px; }
+      .provider-card .pc-chain { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+      .provider-card .pc-note { font-size: 12.5px; color: var(--ink-3); margin-top: 7px; }
+
+      /* ---------- Main ---------- */
+      .main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+      .topbar {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 16px; border-bottom: 1px solid var(--line);
+        background: var(--bg);
+      }
+      .icon-btn {
+        background: none; border: 1px solid transparent; border-radius: 9px;
+        width: 2.5rem; height: 2.5rem; min-height: 2.5rem;
+        display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2);
+      }
+      .icon-btn:hover { background: var(--surface-2); border-color: var(--line); color: var(--ink); }
+      .menu-btn { display: none; }
+      .tabs {
+        display: flex; gap: 2px; background: var(--surface-2);
+        border: 1px solid var(--line); border-radius: 10px; padding: 3px;
+      }
+      .tabs button {
+        border: none; background: none; border-radius: 8px; padding: 5px 16px;
+        font-weight: 600; font-size: 14px; color: var(--ink-2); min-height: 2.1rem;
+      }
+      .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+      .topbar .spacer { flex: 1; }
+      .top-note { font-size: 12.5px; color: var(--ink-3); display: none; }
+      @media (min-width: 900px) { .top-note { display: block; } }
+
+      .scroll-area { flex: 1; overflow-y: auto; min-height: 0; }
+      .thread { max-width: 760px; margin: 0 auto; padding: 26px 20px 12px; }
+
+      /* Empty state */
+      .empty { text-align: center; padding: 6vh 8px 10px; }
+      .empty h1 {
+        font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 5.4vw, 44px);
+        line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.01em;
+      }
+      .empty p { color: var(--ink-2); margin: 0 auto 26px; max-width: 520px; }
+      .suggest { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+      .suggest button {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 13px 15px; text-align: left; min-height: 3.4rem;
+      }
+      .suggest button:hover { border-color: var(--line-2); background: var(--surface-2); }
+      .suggest .s-title { font-weight: 600; font-size: 14.5px; display: block; }
+      .suggest .s-sub { font-size: 13px; color: var(--ink-2); display: block; margin-top: 2px; }
+      @media (max-width: 560px) { .suggest { grid-template-columns: 1fr; } }
+
+      /* Messages */
+      .msg { margin: 0 0 22px; }
+      .msg.user { display: flex; justify-content: flex-end; }
+      .msg.user .bubble {
+        background: var(--user-bubble); border-radius: 16px 16px 4px 16px;
+        padding: 10px 15px; max-width: 82%; white-space: pre-wrap; overflow-wrap: anywhere;
+      }
+      .msg.ai .who { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+      .msg.ai .dot {
+        width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+        color: #fff; font-family: var(--serif); font-size: 13px; font-weight: 600;
+        display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+      }
+      .badge {
+        font-size: 12px; color: var(--accent-ink); background: var(--accent-soft);
+        border-radius: 999px; padding: 2px 9px; font-weight: 600;
+      }
+      .msg.ai .body { overflow-wrap: anywhere; }
+      .msg.ai .body p { margin: 0 0 10px; }
+      .msg.ai .body p:last-child { margin-bottom: 0; }
+      .msg.ai .body pre {
+        background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+        padding: 11px 13px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5;
+      }
+      .msg.ai .body code { font-family: var(--mono); font-size: 0.92em; background: var(--surface-2); border-radius: 5px; padding: 1px 5px; }
+      .msg.ai .body pre code { background: none; padding: 0; }
+      .msg.ai .body ul { margin: 4px 0 10px; padding-left: 20px; }
+      .msg img.gen {
+        max-width: 100%; border-radius: var(--radius); border: 1px solid var(--line);
+        display: block; margin-top: 4px; background: var(--surface-2);
+      }
+      .msg .actions { display: flex; gap: 4px; margin-top: 8px; }
+      .msg .actions button {
+        background: none; border: none; color: var(--ink-3); font-size: 12.5px; font-weight: 600;
+        border-radius: 7px; padding: 4px 9px; min-height: 2rem;
+        display: inline-flex; align-items: center; gap: 5px;
+      }
+      .msg .actions button:hover { background: var(--surface-2); color: var(--ink); }
+      .error-box {
+        border: 1px solid var(--err); color: var(--err); border-radius: 10px;
+        padding: 10px 13px; font-size: 14px; background: var(--surface);
+        white-space: pre-wrap; overflow-wrap: anywhere;
+      }
+      .thinking { display: inline-flex; gap: 5px; padding: 8px 2px; }
+      .thinking span { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); animation: blink 1.2s infinite; }
+      .thinking span:nth-child(2) { animation-delay: 0.2s; }
+      .thinking span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { .thinking span { animation: none; opacity: 0.6; } }
+
+      /* Composer */
+      .composer-wrap { padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); }
+      .composer {
+        max-width: 760px; margin: 0 auto; background: var(--surface);
+        border: 1px solid var(--line-2); border-radius: 18px;
+        padding: 10px 10px 8px; box-shadow: 0 2px 10px rgba(50,38,20,0.05);
+      }
+      .composer:focus-within { border-color: var(--accent); }
+      .doc-chip {
+        display: none; align-items: center; gap: 8px; margin: 0 4px 8px;
+        background: var(--accent-soft); color: var(--accent-ink);
+        border-radius: 9px; padding: 6px 10px; font-size: 13px; font-weight: 600;
+      }
+      .doc-chip.show { display: flex; }
+      .doc-chip .x { margin-left: auto; background: none; border: none; color: inherit; font-weight: 700; min-height: 2rem; min-width: 2rem; border-radius: 6px; }
+      .composer textarea {
+        width: 100%; border: none; background: none; resize: none;
+        padding: 4px 6px; max-height: 180px; min-height: 2.6rem; outline: none;
+        font-size: 15.5px; line-height: 1.5;
+      }
+      .composer textarea::placeholder { color: var(--ink-3); }
+      .composer-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .composer-row .tool-btn {
+        background: none; border: 1px solid transparent; border-radius: 9px;
+        width: 2.4rem; height: 2.4rem; min-height: 2.4rem; color: var(--ink-2);
+        display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+      }
+      .composer-row .tool-btn:hover { background: var(--surface-2); }
+      .composer-row .tool-btn.on { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent); }
+      .composer-row .tool-btn.rec { background: #f6dcd6; color: var(--err); border-color: var(--err); }
+      .composer-row select {
+        background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px;
+        padding: 5px 8px; font-size: 13.5px; font-weight: 600; max-width: 46vw;
+      }
+      .composer-row .grow { flex: 1; }
+      .send-btn {
+        background: var(--accent); color: #fff; border: none; border-radius: 50%;
+        width: 2.5rem; height: 2.5rem; min-height: 2.5rem; flex: 0 0 auto;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .send-btn:hover { background: var(--accent-hover); }
+      .send-btn:disabled { background: var(--line-2); cursor: default; }
+      .composer-hint { max-width: 760px; margin: 7px auto 0; text-align: center; font-size: 12px; color: var(--ink-3); }
+
+      /* Repos view */
+      .repos { max-width: 820px; margin: 0 auto; padding: 24px 20px 40px; display: none; }
+      .repos.show { display: block; }
+      .repos h2 { font-family: var(--serif); font-size: 27px; font-weight: 600; margin: 0 0 6px; }
+      .repos .lede { color: var(--ink-2); margin: 0 0 18px; max-width: 640px; }
+      .chain-banner {
+        background: var(--accent-soft); border-radius: var(--radius); padding: 13px 16px;
+        font-size: 14px; color: var(--accent-ink); margin-bottom: 20px; line-height: 1.6;
+      }
+      .chain-banner strong { font-weight: 700; }
+      .repo-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 640px) { .repo-list { grid-template-columns: 1fr; } }
+      .repo {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 15px 16px;
+      }
+      .repo h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+      .repo .kind { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); font-weight: 700; }
+      .repo p { margin: 5px 0 0; font-size: 14px; color: var(--ink-2); }
+      .repo .st { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; display: block; }
+      .repo.warn { border-style: dashed; }
+      .repos h4 { font-family: var(--serif); font-size: 20px; margin: 26px 0 8px; }
+      .repos .fine { font-size: 14px; color: var(--ink-2); max-width: 680px; }
+      .repos .fine li { margin-bottom: 5px; }
+
+      /* Settings drawer */
+      .scrim {
+        position: fixed; inset: 0; background: rgba(25, 20, 12, 0.42);
+        opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 40;
+      }
+      .scrim.show { opacity: 1; pointer-events: auto; }
+      .settings {
+        position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 94vw);
+        background: var(--surface); border-left: 1px solid var(--line);
+        box-shadow: var(--shadow); z-index: 50; transform: translateX(102%);
+        visibility: hidden; pointer-events: none;
+        transition: transform 0.24s ease, visibility 0s linear 0.24s;
+        overflow-y: auto; padding: 18px 20px 30px;
+      }
+      .settings.show { transform: translateX(0); visibility: visible; pointer-events: auto; transition: transform 0.24s ease, visibility 0s; }
+      @media (prefers-reduced-motion: reduce) { .settings, .scrim, .sidebar { transition: none; } }
+      .settings header { display: flex; align-items: center; margin-bottom: 4px; }
+      .settings header h2 { font-family: var(--serif); font-size: 24px; margin: 0; font-weight: 600; }
+      .settings header .icon-btn { margin-left: auto; }
+      .settings .sub { font-size: 13.5px; color: var(--ink-2); margin: 0 0 16px; }
+      .prov {
+        border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 13px 14px; margin-bottom: 11px; background: var(--bg);
+      }
+      .prov h3 { margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+      .prov h3 .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
+      .prov p { margin: 4px 0 9px; font-size: 13px; color: var(--ink-2); }
+      .prov label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin: 8px 0 3px; }
+      .prov input {
+        width: 100%; background: var(--surface); border: 1px solid var(--line-2);
+        border-radius: 9px; padding: 8px 10px; font-size: 14px;
+      }
+      .prov .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+      .test-btn {
+        background: var(--surface); border: 1px solid var(--line-2); border-radius: 9px;
+        padding: 6px 13px; font-weight: 600; font-size: 13.5px; min-height: 2.3rem;
+      }
+      .test-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+      .test-status { font-size: 13px; }
+      .test-status.ok { color: var(--ok); }
+      .test-status.err { color: var(--err); }
+
+      .toast {
+        position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(16px);
+        background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 999px;
+        font-size: 13.5px; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 60;
+        max-width: 92vw; text-align: center;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      /* Mobile sidebar */
+      @media (max-width: 820px) {
+        .sidebar {
+          position: fixed; top: 0; left: 0; bottom: 0; z-index: 45;
+          transform: translateX(-104%); visibility: hidden; pointer-events: none;
+          transition: transform 0.24s ease, visibility 0s linear 0.24s;
+          box-shadow: var(--shadow);
+        }
+        .sidebar.show { transform: translateX(0); visibility: visible; pointer-events: auto; transition: transform 0.24s ease, visibility 0s; }
+        .menu-btn { display: inline-flex; }
+      }
+      .side-scrim { display: none; }
+      @media (max-width: 820px) {
+        .side-scrim.show { display: block; position: fixed; inset: 0; background: rgba(25,20,12,0.42); z-index: 44; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- ============ SIDEBAR ============ -->
+      <aside class="sidebar" id="sidebar" aria-label="Chats">
+        <div class="side-top">
+          <button class="new-chat-btn" id="newChatBtn" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New chat
+          </button>
+        </div>
+        <div class="side-search">
+          <input type="search" id="chatSearch" placeholder="Search chats in this session" aria-label="Search chats" />
+        </div>
+        <nav class="chat-list" id="chatList" aria-label="Chat history"></nav>
+        <div class="provider-card">
+          <div class="pc-label">Answering with</div>
+          <div class="pc-name" id="pcName">Auto</div>
+          <div class="pc-chain" id="pcChain">Ollama · Jan · Groq · OpenRouter · Gemini · Mistral · LLM7 · Free web gateway (text.pollinations.ai)</div>
+          <div class="pc-note">Chats and keys live only in this open page — reload and they are gone.</div>
+        </div>
+      </aside>
+      <div class="side-scrim" id="sideScrim"></div>
+
+      <!-- ============ MAIN ============ -->
+      <div class="main">
+        <div class="topbar">
+          <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open chat list">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="tabs" role="tablist" aria-label="Views">
+            <button type="button" role="tab" id="tabChat" aria-selected="true">Chat</button>
+            <button type="button" role="tab" id="tabRepos" aria-selected="false">Repos</button>
+          </div>
+          <div class="spacer"></div>
+          <span class="top-note">Public version — anyone with the link can chat here</span>
+          <button class="icon-btn" id="settingsBtn" type="button" aria-label="Open settings" title="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09c0 .68.4 1.3 1 1.55.61.26 1.32.1 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01c.26.6.87 1 1.55 1H21a2 2 0 1 1 0 4h-.09c-.68 0-1.3.4-1.51 1z"/></svg>
+          </button>
+        </div>
+
+        <div class="scroll-area" id="scrollArea">
+          <div class="thread" id="thread"></div>
+
+          <!-- Repos view -->
+          <section class="repos" id="reposView" aria-label="Open-source repos behind this bot">
+            <h2>Built from open-source repos</h2>
+            <p class="lede">No Muse API anywhere in this bot. The interface and features follow patterns from these public projects, and every reply comes from one of the providers in the Auto chain.</p>
+            <div class="chain-banner"><strong>Auto chain, tried in order:</strong> Ollama · Jan · Groq · OpenRouter · Gemini · Mistral · LLM7 · Free web gateway (text.pollinations.ai). Local apps (Ollama, Jan) only answer when they run on the same device that opened this page and your browser allows the connection; the free gateway is the last stop, so Auto can still answer with no key saved.</div>
+            <div class="repo-list">
+              <article class="repo"><span class="kind">Interface</span><h3>LibreChat</h3><p>Multi-provider chat interface — the layout, conversation list and provider switching here follow its shape.</p></article>
+              <article class="repo"><span class="kind">Interface</span><h3>NextChat</h3><p>Lightweight cross-platform chat client; the fast, single-page feel of this public version comes from it.</p></article>
+              <article class="repo"><span class="kind">Personas</span><h3>LobeChat</h3><p>Assistant personas and style presets — the Style selector in the composer is modelled on it.</p></article>
+              <article class="repo"><span class="kind">Documents</span><h3>AnythingLLM</h3><p>Chat with your own documents — the attach-and-answer-only-from-the-file behaviour follows its approach, done entirely in your browser here.</p></article>
+              <article class="repo"><span class="kind">Workflows + RAG</span><h3>Dify</h3><p>Large open-source LLM app platform (~142k stars) for workflow and retrieval apps built on top of chat models.</p></article>
+              <article class="repo"><span class="kind">Knowledge base</span><h3>FastGPT</h3><p>RAG knowledge platform — question answering over your own document collections.</p></article>
+              <article class="repo"><span class="kind">Client app</span><h3>Chatbox</h3><p>Desktop and phone chat client (~40k stars) that talks to many providers from one window.</p></article>
+              <article class="repo"><span class="kind">Compare</span><h3>Msty</h3><p>Side-by-side model comparison — handy when you want to judge which provider answers best.</p></article>
+              <article class="repo"><span class="kind">Search + chat</span><h3>Onyx</h3><p>Chat with document search across your files and tools.</p></article>
+              <article class="repo warn"><span class="kind">Retired</span><h3>GitHub Models</h3><p>Was a free way to try models from GitHub. Retired on 30 July 2026, so it is not in the chain.</p><span class="st">Not used — no longer available.</span></article>
+              <article class="repo warn"><span class="kind">No longer free</span><h3>Hugging Face · SambaNova · Cerebras</h3><p>Free credits and card-free tiers have ended on these, so they are listed only as a caution, not as providers.</p><span class="st">Not used — a card is now required.</span></article>
+            </div>
+            <h4>How the providers answer</h4>
+            <ul class="fine">
+              <li><strong>Free web gateway (text.pollinations.ai)</strong> — no key, no sign-up. It is a shared public service, so it can be slow or throttled at busy times.</li>
+              <li><strong>LLM7</strong> — works with no key on a shared anonymous daily quota; when that quota runs out, Auto moves on to the gateway.</li>
+              <li><strong>Groq, OpenRouter, Gemini, Mistral</strong> — need your own free API key, pasted in Settings. Each key is sent only to its own provider.</li>
+              <li><strong>Ollama and Jan</strong> — free and fully local, but only reachable when they are running on the device viewing this page.</li>
+              <li><strong>Images</strong> — generated through image.pollinations.ai. A watermark or a slower model can appear on the free tier.</li>
+            </ul>
+          </section>
+        </div>
+
+        <!-- Composer -->
+        <div class="composer-wrap" id="composerWrap">
+          <form class="composer" id="composerForm">
+            <div class="doc-chip" id="docChip">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              <span id="docName">document</span>
+              <button class="x" type="button" id="docRemove" aria-label="Remove document">✕</button>
+            </div>
+            <textarea id="input" rows="2" placeholder="Message the bot — বাংলাতেও লিখতে পারো…" aria-label="Your message"></textarea>
+            <div class="composer-row">
+              <button class="tool-btn" type="button" id="attachBtn" aria-label="Attach a document (.txt, .md or .pdf)" title="Attach a document">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <input type="file" id="fileInput" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" hidden />
+              <button class="tool-btn" type="button" id="micBtn" aria-label="Voice input" title="Voice input (mic)">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+              </button>
+              <button class="tool-btn" type="button" id="imgBtn" aria-label="Image mode" title="Image mode — your next message becomes a picture" aria-pressed="false">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+              </button>
+              <select id="providerSel" aria-label="Provider" title="Provider">
+                <option value="auto">Auto</option>
+                <option value="gateway">Free gateway</option>
+                <option value="llm7">LLM7</option>
+                <option value="groq">Groq</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="gemini">Gemini</option>
+                <option value="mistral">Mistral</option>
+                <option value="ollama">Ollama (local)</option>
+                <option value="jan">Jan (local)</option>
+              </select>
+              <select id="styleSel" aria-label="Style" title="Reply style">
+                <option value="balanced">Balanced</option>
+                <option value="bangla">বাংলা</option>
+                <option value="concise">Concise</option>
+                <option value="detailed">Detailed</option>
+                <option value="friendly">Friendly</option>
+              </select>
+              <span class="grow"></span>
+              <button class="send-btn" type="submit" id="sendBtn" aria-label="Send message">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              </button>
+            </div>
+          </form>
+          <p class="composer-hint" id="composerHint">Auto tries: Ollama · Jan · Groq · OpenRouter · Gemini · Mistral · LLM7 · Free web gateway (text.pollinations.ai)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="scrim" id="scrim"></div>
+    <aside class="settings" id="settingsPanel" aria-label="Settings">
+      <header>
+        <h2>Settings</h2>
+        <button class="icon-btn" id="settingsClose" type="button" aria-label="Close settings">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <p class="sub">Keys are kept only in this open page and sent only to their own provider. Reload the page and every key here is cleared.</p>
+      <div id="provSettings"></div>
+      <div class="prov">
+        <h3>Free web gateway <span class="tag">No key</span></h3>
+        <p>text.pollinations.ai — the final stop in Auto, so chat still answers when nothing else is set up.</p>
+        <div class="row">
+          <button class="test-btn" type="button" data-test="gateway">Test connection</button>
+          <span class="test-status" id="test-gateway"></span>
+        </div>
+      </div>
+      <div class="prov">
+        <h3>LLM7 <span class="tag">No key needed</span></h3>
+        <p>Anonymous shared daily quota. When it runs out, Auto falls through to the free gateway.</p>
+        <div class="row">
+          <button class="test-btn" type="button" data-test="llm7">Test connection</button>
+          <span class="test-status" id="test-llm7"></span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+      "use strict";
+      /* ================= State (memory only — nothing is stored) ================= */
+      var PROVIDERS = {
+        ollama:     { name: "Ollama",     url: "http://localhost:11434/v1/chat/completions", model: "llama3.1", needsKey: false, local: true,
+                      blurb: "Runs on your own computer. Only answers when Ollama is running on the device viewing this page." },
+        jan:        { name: "Jan",        url: "http://localhost:1337/v1/chat/completions",  model: "llama3.1", needsKey: false, local: true,
+                      blurb: "Local desktop app. Only answers when Jan is running on the device viewing this page, with its API server on." },
+        groq:       { name: "Groq",       url: "https://api.groq.com/openai/v1/chat/completions", model: "llama-3.3-70b-versatile", needsKey: true,
+                      blurb: "Very fast hosted models. Free key from Groq's console — no card needed." },
+        openrouter: { name: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", model: "meta-llama/llama-3.3-70b-instruct:free", needsKey: true,
+                      blurb: "One key, many models, including free ones. Free key from openrouter.ai." },
+        gemini:     { name: "Gemini",     url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", model: "gemini-2.0-flash", needsKey: true,
+                      blurb: "Google AI Studio free key — no card needed. Model: Gemini Flash." },
+        mistral:    { name: "Mistral",    url: "https://api.mistral.ai/v1/chat/completions", model: "mistral-small-latest", needsKey: true,
+                      blurb: "Mistral's free mode. Needs your own free API key from Mistral." },
+        llm7:       { name: "LLM7",       url: "https://api.llm7.io/v1/chat/completions", model: "gpt-4o-mini", needsKey: false,
+                      blurb: "No key needed — shared anonymous daily quota, so it can run out." },
+        gateway:    { name: "Free web gateway", short: "Free web gateway (text.pollinations.ai)", url: "https://text.pollinations.ai/openai", model: "openai", needsKey: false,
+                      blurb: "text.pollinations.ai — no key, no sign-up." }
+      };
+      var AUTO_ORDER = ["ollama", "jan", "groq", "openrouter", "gemini", "mistral", "llm7", "gateway"];
+      var KEYED = ["groq", "openrouter", "gemini", "mistral"];
+
+      var keys = {};    // providerId -> api key (memory only)
+      var models = {};  // providerId -> model override (memory only)
+      KEYED.concat(["ollama", "jan", "llm7"]).forEach(function (id) { models[id] = PROVIDERS[id].model; });
+      models.gateway = PROVIDERS.gateway.model;
+
+      var chats = [];        // {id, title, messages:[{role, content, via, image}]}
+      var currentId = null;
+      var sending = false;
+      var imageMode = false;
+      var attachedDoc = null; // {name, text}
+      var view = "chat";
+
+      /* ================= Helpers ================= */
+      function $(id) { return document.getElementById(id); }
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function toast(msg) {
+        var t = $("toast"); t.textContent = msg; t.classList.add("show");
+        clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("show"); }, 2600);
+      }
+      function hasBangla(s) { return /[\u0980-\u09FF]/.test(s || ""); }
+      function fetchTimeout(url, opts, ms) {
+        var ctl = new AbortController();
+        var h = setTimeout(function () { ctl.abort(); }, ms || 45000);
+        opts = opts || {}; opts.signal = ctl.signal;
+        return fetch(url, opts).finally(function () { clearTimeout(h); });
+      }
+      function formatBody(text) {
+        var s = esc(text);
+        s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function (m, lang, code) { return "\u0001" + code + "\u0002"; });
+        var blocks = s.split("\u0001");
+        var out = "";
+        blocks.forEach(function (part) {
+          var seg = part.split("\u0002");
+          if (seg.length === 2) {
+            out += "<pre><code>" + seg[0] + "</code></pre>" + renderInline(seg[1]);
+          } else {
+            out += renderInline(part);
+          }
+        });
+        return out;
+      }
+      function renderInline(s) {
+        s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+        s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        var lines = s.split(/\n/);
+        var html = "", inList = false;
+        lines.forEach(function (ln) {
+          var t = ln.replace(/^\s+|\s+$/g, "");
+          if (/^[-•]\s+/.test(t)) {
+            if (!inList) { html += "<ul>"; inList = true; }
+            html += "<li>" + t.replace(/^[-•]\s+/, "") + "</li>";
+          } else {
+            if (inList) { html += "</ul>"; inList = false; }
+            if (t) html += "<p>" + t + "</p>";
+          }
+        });
+        if (inList) html += "</ul>";
+        return html || "<p></p>";
+      }
+      function scrollDown() {
+        var a = $("scrollArea");
+        requestAnimationFrame(function () { a.scrollTop = a.scrollHeight; });
+      }
+      function currentChat() {
+        for (var i = 0; i < chats.length; i++) if (chats[i].id === currentId) return chats[i];
+        return null;
+      }
+
+      /* ================= Rendering ================= */
+      var SUGGESTIONS = [
+        { t: "বাংলায় নিজের পরিচয় দাও", s: "Ask the bot to introduce itself in Bangla", q: "বাংলায় নিজের পরিচয় দাও" },
+        { t: "Explain simply", s: "How does rain form? Explain it for a 10-year-old", q: "How does rain form? Explain it simply, for a 10-year-old." },
+        { t: "Write something", s: "A short poem about the Padma river at dusk", q: "Write a short poem about the Padma river at dusk." },
+        { t: "Draw a picture", s: "Turn on image mode and describe any scene", q: "IMAGE:A rickshaw in old Dhaka after rain, colourful street, reflections in puddles" }
+      ];
+
+      function renderThread() {
+        var th = $("thread");
+        var chat = currentChat();
+        if (!chat || chat.messages.length === 0) {
+          var html = '<div class="empty"><h1>How can I help you today?</h1>' +
+            '<p>Ask in English or বাংলায়. With no key saved, Auto still answers through the free web gateway — your own free keys for Groq, Gemini and others can be added in Settings.</p><div class="suggest">';
+          SUGGESTIONS.forEach(function (sg, i) {
+            html += '<button type="button" data-sug="' + i + '"><span class="s-title">' + esc(sg.t) + '</span><span class="s-sub">' + esc(sg.s) + "</span></button>";
+          });
+          html += "</div></div>";
+          th.innerHTML = html;
+          var btns = th.querySelectorAll("[data-sug]");
+          for (var i = 0; i < btns.length; i++) {
+            btns[i].addEventListener("click", function () {
+              var sg = SUGGESTIONS[Number(this.getAttribute("data-sug"))];
+              if (sg.q.indexOf("IMAGE:") === 0) {
+                setImageMode(true);
+                $("input").value = sg.q.slice(6);
+                $("input").focus(); autoGrow();
+              } else {
+                $("input").value = sg.q;
+                sendCurrent();
+              }
+            });
+          }
+          return;
+        }
+        var out = "";
+        chat.messages.forEach(function (m, idx) {
+          if (m.role === "user") {
+            out += '<div class="msg user"><div class="bubble">' + esc(m.content) + "</div></div>";
+          } else if (m.error) {
+            out += '<div class="msg ai"><div class="who"><span class="dot">A</span></div><div class="error-box">' + esc(m.content) + "</div></div>";
+          } else {
+            out += '<div class="msg ai"><div class="who"><span class="dot">A</span>' +
+              (m.via ? '<span class="badge">via ' + esc(m.via) + "</span>" : "") + '</div><div class="body">' +
+              (m.image ? '<img class="gen" alt="Generated image" src="' + esc(m.image) + '">' : formatBody(m.content)) +
+              '</div><div class="actions">' +
+              '<button type="button" data-copy="' + idx + '">Copy</button>' +
+              (m.image ? "" : '<button type="button" data-listen="' + idx + '">Listen</button>') +
+              "</div></div>";
+          }
+        });
+        if (sending) out += '<div class="msg ai"><div class="who"><span class="dot">A</span></div><div class="thinking" aria-label="Thinking"><span></span><span></span><span></span></div></div>';
+        th.innerHTML = out;
+        th.querySelectorAll("[data-copy]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var m = currentChat().messages[Number(this.getAttribute("data-copy"))];
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(m.content || "").then(function () { toast("Copied"); }, function () { toast("Copy failed"); });
+            }
+          });
+        });
+        th.querySelectorAll("[data-listen]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var m = currentChat().messages[Number(this.getAttribute("data-listen"))];
+            speak(m.content || "");
+          });
+        });
+        scrollDown();
+      }
+
+      function renderChatList() {
+        var q = ($("chatSearch").value || "").toLowerCase();
+        var list = $("chatList");
+        var visible = chats.filter(function (c) { return !q || c.title.toLowerCase().indexOf(q) >= 0; });
+        if (!visible.length) {
+          list.innerHTML = '<div class="side-empty">' + (chats.length ? "No chats match your search." : "No chats yet in this session. Start one above — it stays only while this page is open.") + "</div>";
+          return;
+        }
+        var html = "<h3>Today</h3>";
+        visible.forEach(function (c) {
+          html += '<div class="chat-item' + (c.id === currentId ? " active" : "") + '" data-chat="' + c.id + '" role="button" tabindex="0" aria-label="Open chat: ' + esc(c.title) + '"><span class="t">' + esc(c.title) + '</span><span class="del" data-del="' + c.id + '" role="button" tabindex="0" aria-label="Delete chat" title="Delete chat">✕</span></div>';
+        });
+        list.innerHTML = html;
+        list.querySelectorAll("[data-del]").forEach(function (d) {
+          function onDel(e) { e.stopPropagation(); deleteChat(d.getAttribute("data-del")); }
+          d.addEventListener("click", onDel);
+          d.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onDel(e); } });
+        });
+        list.querySelectorAll("[data-chat]").forEach(function (b) {
+          function open() {
+            currentId = b.getAttribute("data-chat");
+            renderChatList(); renderThread(); closeSidebarMobile();
+          }
+          b.addEventListener("click", open);
+          b.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); open(); } });
+        });
+      }
+
+      function updateProviderCard() {
+        var sel = $("providerSel").value;
+        if (sel === "auto") {
+          $("pcName").textContent = "Auto";
+          $("pcChain").textContent = "Ollama · Jan · Groq · OpenRouter · Gemini · Mistral · LLM7 · Free web gateway (text.pollinations.ai)";
+          $("composerHint").textContent = "Auto tries: Ollama · Jan · Groq · OpenRouter · Gemini · Mistral · LLM7 · Free web gateway (text.pollinations.ai)";
+        } else {
+          var p = PROVIDERS[sel];
+          $("pcName").textContent = p.name;
+          $("pcChain").textContent = p.local ? "Local — must be running on this device." : (p.needsKey && !keys[sel] ? "Needs your free API key — add it in Settings." : "Pinned — replies come only from " + p.name + ".");
+          $("composerHint").textContent = "Replies come only from " + p.name + (p.needsKey && !keys[sel] ? " — add its key in Settings first." : ".");
+        }
+      }
+
+      /* ================= Chat flow ================= */
+      function newChat() {
+        var c = { id: "c" + Date.now() + Math.floor(Math.random() * 9999), title: "New chat", messages: [] };
+        chats.unshift(c); currentId = c.id;
+        renderChatList(); renderThread();
+        $("input").focus();
+      }
+      function deleteChat(id) {
+        chats = chats.filter(function (c) { return c.id !== id; });
+        if (currentId === id) { currentId = chats.length ? chats[0].id : null; if (!currentId) newChat(); }
+        renderChatList(); renderThread();
+      }
+      function ensureChat() {
+        var c = currentChat();
+        if (!c) { newChat(); c = currentChat(); }
+        return c;
+      }
+
+      function styleSystem(style) {
+        switch (style) {
+          case "bangla": return "Always reply in Bangla (Bengali), using clear, natural language.";
+          case "concise": return "Reply briefly and directly. Short sentences, no filler.";
+          case "detailed": return "Reply in detail with clear structure, examples where useful, and complete explanations.";
+          case "friendly": return "Reply in a warm, friendly, encouraging tone while staying accurate.";
+          default: return "Reply clearly and helpfully.";
+        }
+      }
+      function buildMessages(chat) {
+        var msgs = [];
+        var sys = styleSystem($("styleSel").value);
+        if (attachedDoc) {
+          sys += " The user attached a document named \"" + attachedDoc.name + "\". Answer ONLY from the document text below. If the answer is not in the document, say so plainly.\n\n--- DOCUMENT ---\n" + attachedDoc.text + "\n--- END DOCUMENT ---";
+        }
+        msgs.push({ role: "system", content: sys });
+        chat.messages.forEach(function (m) {
+          if (!m.error && !m.image) msgs.push({ role: m.role === "user" ? "user" : "assistant", content: m.content });
+        });
+        return msgs;
+      }
+
+      function callProvider(id, messages) {
+        var p = PROVIDERS[id];
+        if (id === "gateway") return callGateway(messages);
+        var headers = { "Content-Type": "application/json" };
+        if (keys[id]) headers["Authorization"] = "Bearer " + keys[id];
+        if (id === "openrouter") { headers["X-Title"] = "AI Chat Bot Public"; }
+        var body = { model: models[id] || p.model, messages: messages };
+        var timeout = p.local ? 4000 : 60000;
+        return fetchTimeout(p.url, { method: "POST", headers: headers, body: JSON.stringify(body) }, timeout)
+          .then(function (r) {
+            return r.text().then(function (txt) {
+              if (!r.ok) {
+                var msg = "HTTP " + r.status;
+                try { var j = JSON.parse(txt); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e) {}
+                throw new Error(p.name + ": " + String(msg).slice(0, 220));
+              }
+              var j = JSON.parse(txt);
+              var content = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+              if (!content) throw new Error(p.name + ": empty reply");
+              return { content: content, via: p.name + " · " + body.model };
+            });
+          });
+      }
+
+      function callGateway(messages) {
+        var body = { model: "openai", messages: messages };
+        return fetchTimeout("https://text.pollinations.ai/openai", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+        }, 60000).then(function (r) {
+          if (!r.ok) throw new Error("gateway HTTP " + r.status);
+          return r.json();
+        }).then(function (j) {
+          var content = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+          if (!content) throw new Error("gateway empty reply");
+          return { content: content, via: "Free web gateway (text.pollinations.ai) · openai" };
+        }).catch(function () {
+          // Fallback: plain-text GET with the conversation flattened.
+          var flat = messages.filter(function (m) { return m.role !== "system"; })
+            .map(function (m) { return (m.role === "user" ? "User: " : "Assistant: ") + m.content; }).join("\n");
+          var sys = messages.length && messages[0].role === "system" ? messages[0].content.split("\n\n--- DOCUMENT ---")[0] + "\n\n" : "";
+          var url = "https://text.pollinations.ai/" + encodeURIComponent(sys + flat + "\nAssistant:");
+          return fetchTimeout(url, {}, 60000).then(function (r) {
+            if (!r.ok) throw new Error("Free web gateway: HTTP " + r.status);
+            return r.text();
+          }).then(function (txt) {
+            if (!txt || !txt.trim()) throw new Error("Free web gateway: empty reply");
+            return { content: txt.trim(), via: "Free web gateway (text.pollinations.ai) · openai" };
+          });
+        });
+      }
+
+      function sendCurrent() {
+        if (sending) return;
+        var text = $("input").value.trim();
+        if (!text) return;
+        var chat = ensureChat();
+        chat.messages.push({ role: "user", content: text });
+        if (chat.title === "New chat") chat.title = text.length > 36 ? text.slice(0, 36) + "…" : text;
+        $("input").value = ""; autoGrow();
+        sending = true; $("sendBtn").disabled = true;
+        renderChatList(); renderThread();
+
+        if (imageMode) {
+          var seed = Math.floor(Math.random() * 999999);
+          var imgUrl = "https://image.pollinations.ai/prompt/" + encodeURIComponent(text) + "?width=1024&height=1024&seed=" + seed + "&nologo=true";
+          var probe = new Image();
+          probe.onload = function () {
+            chat.messages.push({ role: "assistant", content: text, image: imgUrl, via: "image.pollinations.ai" });
+            finishSend();
+          };
+          probe.onerror = function () {
+            chat.messages.push({ role: "assistant", error: true, content: "Image generation failed — the free image service did not return a picture. Wait a moment and try again; free-tier throttling is common." });
+            finishSend();
+          };
+          probe.src = imgUrl;
+          setImageMode(false);
+          return;
+        }
+
+        var messages = buildMessages(chat);
+        var pinned = $("providerSel").value;
+        var tried = [];
+        var chain;
+        if (pinned === "auto") {
+          chain = AUTO_ORDER.filter(function (id) {
+            if (KEYED.indexOf(id) >= 0 && !keys[id]) return false; // no key saved — skipped, not "tried"
+            return true;
+          });
+        } else {
+          chain = [pinned];
+        }
+
+        var i = 0;
+        function attempt() {
+          if (i >= chain.length) {
+            var detail;
+            if (pinned === "auto") {
+              detail = "No reply — none of the Auto-mode providers answered. Tried in order: " + tried.join(" · ") + "." +
+                (KEYED.some(function (k) { return !keys[k]; }) ? " Groq, OpenRouter, Gemini and Mistral are skipped until you add their free keys in Settings." : "");
+            } else {
+              detail = "No reply from " + PROVIDERS[pinned].name + ". " + (tried[0] || "");
+            }
+            chat.messages.push({ role: "assistant", error: true, content: detail });
+            finishSend();
+            return;
+          }
+          var id = chain[i++];
+          callProvider(id, messages).then(function (res) {
+            chat.messages.push({ role: "assistant", content: res.content, via: res.via });
+            finishSend();
+          }).catch(function (err) {
+            tried.push(PROVIDERS[id].name + " (" + String(err && err.message ? err.message : err).slice(0, 90) + ")");
+            attempt();
+          });
+        }
+        function finishSend() {
+          sending = false; $("sendBtn").disabled = false;
+          renderChatList(); renderThread();
+          $("input").focus();
+        }
+        attempt();
+      }
+
+      /* ================= Voice ================= */
+      function speak(text) {
+        if (!("speechSynthesis" in window)) { toast("Listen is not supported in this browser"); return; }
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text.slice(0, 900));
+        u.lang = hasBangla(text) ? "bn-BD" : "en-US";
+        window.speechSynthesis.speak(u);
+      }
+      var recog = null;
+      function toggleMic() {
+        var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { toast("Voice input needs Chrome — this browser has no speech recognition"); return; }
+        if (recog) { recog.stop(); return; }
+        recog = new SR();
+        recog.lang = $("styleSel").value === "bangla" ? "bn-BD" : (hasBangla($("input").value) ? "bn-BD" : "en-US");
+        recog.interimResults = false;
+        $("micBtn").classList.add("rec");
+        toast("Listening… speak now (" + (recog.lang === "bn-BD" ? "বাংলা" : "English") + ")");
+        recog.onresult = function (ev) {
+          var t = ev.results[0][0].transcript;
+          $("input").value = ($("input").value ? $("input").value + " " : "") + t;
+          autoGrow(); $("input").focus();
+        };
+        recog.onend = function () { recog = null; $("micBtn").classList.remove("rec"); };
+        recog.onerror = function () { recog = null; $("micBtn").classList.remove("rec"); };
+        try { recog.start(); } catch (e) { recog = null; $("micBtn").classList.remove("rec"); }
+      }
+
+      /* ================= Documents ================= */
+      function handleFile(file) {
+        if (!file) return;
+        var name = file.name || "document";
+        var lower = name.toLowerCase();
+        if (lower.endsWith(".pdf")) {
+          if (!window.pdfjsLib) { toast("PDF reader failed to load — check your connection"); return; }
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          file.arrayBuffer().then(function (buf) {
+            return window.pdfjsLib.getDocument({ data: buf }).promise;
+          }).then(function (pdf) {
+            var pages = Math.min(pdf.numPages, 20);
+            var chain = Promise.resolve("");
+            var seq = [];
+            for (var p = 1; p <= pages; p++) seq.push(p);
+            seq.forEach(function (pno) {
+              chain = chain.then(function (acc) {
+                return pdf.getPage(pno).then(function (page) { return page.getTextContent(); }).then(function (tc) {
+                  var line = tc.items.map(function (it) { return it.str; }).join(" ");
+                  return acc + "\n" + line;
+                });
+              });
+            });
+            return chain;
+          }).then(function (text) {
+            setDoc(name, text);
+          }).catch(function () { toast("Could not read that PDF"); });
+        } else {
+          file.text().then(function (text) { setDoc(name, text); }).catch(function () { toast("Could not read that file"); });
+        }
+      }
+      function setDoc(name, text) {
+        text = (text || "").slice(0, 30000);
+        if (!text.trim()) { toast("That file looks empty"); return; }
+        attachedDoc = { name: name, text: text };
+        $("docName").textContent = name + " — answers will come only from this file";
+        $("docChip").classList.add("show");
+        toast("Attached: " + name);
+      }
+      function clearDoc() {
+        attachedDoc = null;
+        $("docChip").classList.remove("show");
+        $("fileInput").value = "";
+      }
+
+      /* ================= Settings ================= */
+      function buildSettings() {
+        var wrap = $("provSettings");
+        var html = "";
+        KEYED.concat(["ollama", "jan"]).forEach(function (id) {
+          var p = PROVIDERS[id];
+          html += '<div class="prov"><h3>' + esc(p.name) + (p.local ? ' <span class="tag">Local</span>' : ' <span class="tag">Free key</span>') + "</h3><p>" + esc(p.blurb) + "</p>";
+          if (p.needsKey) {
+            html += '<label for="key-' + id + '">API key</label><input type="password" id="key-' + id + '" autocomplete="off" placeholder="Paste your ' + esc(p.name) + ' key" value="' + esc(keys[id] || "") + '">';
+          }
+          html += '<label for="model-' + id + '">Model</label><input type="text" id="model-' + id + '" value="' + esc(models[id] || p.model) + '">' +
+            '<div class="row"><button class="test-btn" type="button" data-test="' + id + '">Test connection</button><span class="test-status" id="test-' + id + '"></span></div></div>';
+        });
+        wrap.innerHTML = html;
+        KEYED.forEach(function (id) {
+          $("key-" + id).addEventListener("input", function () {
+            keys[id] = this.value.trim();
+            updateProviderCard();
+          });
+        });
+        KEYED.concat(["ollama", "jan"]).forEach(function (id) {
+          $("model-" + id).addEventListener("input", function () { models[id] = this.value.trim() || PROVIDERS[id].model; });
+        });
+        wrap.querySelectorAll("[data-test]").forEach(bindTest);
+        document.querySelectorAll("#settingsPanel [data-test]").forEach(bindTest);
+      }
+      function bindTest(btn) {
+        if (btn._bound) return; btn._bound = true;
+        btn.addEventListener("click", function () {
+          var id = this.getAttribute("data-test");
+          var st = $("test-" + id);
+          st.className = "test-status"; st.textContent = "Testing…";
+          testProvider(id).then(function (msg) {
+            st.className = "test-status ok"; st.textContent = "✓ " + msg;
+          }).catch(function (err) {
+            st.className = "test-status err"; st.textContent = "✕ " + String(err && err.message ? err.message : err).slice(0, 140);
+          });
+        });
+      }
+      function testProvider(id) {
+        if (KEYED.indexOf(id) >= 0 && !keys[id]) return Promise.reject(new Error("Paste your " + PROVIDERS[id].name + " key first"));
+        var msgs = [{ role: "user", content: "Reply with the single word: ok" }];
+        return callProvider(id, msgs).then(function () { return "Connected — " + PROVIDERS[id].name + " answered"; });
+      }
+
+      /* ================= View / panels ================= */
+      function setView(v) {
+        view = v;
+        $("tabChat").setAttribute("aria-selected", v === "chat" ? "true" : "false");
+        $("tabRepos").setAttribute("aria-selected", v === "repos" ? "true" : "false");
+        $("reposView").classList.toggle("show", v === "repos");
+        $("thread").style.display = v === "repos" ? "none" : "";
+        $("composerWrap").style.display = v === "repos" ? "none" : "";
+        $("scrollArea").scrollTop = 0;
+      }
+      function openSettings() { $("settingsPanel").classList.add("show"); $("scrim").classList.add("show"); }
+      function closeSettings() { $("settingsPanel").classList.remove("show"); $("scrim").classList.remove("show"); }
+      function closeSidebarMobile() { $("sidebar").classList.remove("show"); $("sideScrim").classList.remove("show"); }
+      function setImageMode(on) {
+        imageMode = on;
+        $("imgBtn").classList.toggle("on", on);
+        $("imgBtn").setAttribute("aria-pressed", on ? "true" : "false");
+        $("input").placeholder = on ? "Describe the picture you want…" : "Message the bot — বাংলাতেও লিখতে পারো…";
+      }
+
+      /* ================= Composer ================= */
+      function autoGrow() {
+        var ta = $("input");
+        ta.style.height = "auto";
+        ta.style.height = Math.min(ta.scrollHeight, 180) + "px";
+      }
+
+      /* ================= Wire up ================= */
+      document.addEventListener("DOMContentLoaded", function () {
+        buildSettings();
+        newChat();
+
+        $("composerForm").addEventListener("submit", function (e) { e.preventDefault(); sendCurrent(); });
+        $("input").addEventListener("input", autoGrow);
+        $("input").addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendCurrent(); }
+        });
+        autoGrow();
+
+        $("newChatBtn").addEventListener("click", function () { newChat(); closeSidebarMobile(); });
+        $("chatSearch").addEventListener("input", renderChatList);
+        $("providerSel").addEventListener("change", updateProviderCard);
+        $("styleSel").addEventListener("change", function () { /* style applies to next send */ });
+        $("tabChat").addEventListener("click", function () { setView("chat"); });
+        $("tabRepos").addEventListener("click", function () { setView("repos"); });
+        $("settingsBtn").addEventListener("click", openSettings);
+        $("settingsClose").addEventListener("click", closeSettings);
+        $("scrim").addEventListener("click", closeSettings);
+        $("menuBtn").addEventListener("click", function () { $("sidebar").classList.add("show"); $("sideScrim").classList.add("show"); });
+        $("sideScrim").addEventListener("click", closeSidebarMobile);
+        $("micBtn").addEventListener("click", toggleMic);
+        $("imgBtn").addEventListener("click", function () { setImageMode(!imageMode); $("input").focus(); });
+        $("attachBtn").addEventListener("click", function () { $("fileInput").click(); });
+        $("fileInput").addEventListener("change", function () { handleFile(this.files && this.files[0]); });
+        $("docRemove").addEventListener("click", clearDoc);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeSettings(); closeSidebarMobile(); } });
+        updateProviderCard();
+      });
+    </script>
+  </body>
+</html>
